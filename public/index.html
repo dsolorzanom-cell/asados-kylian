@@ -23,83 +23,83 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background-color: #8b0000; color: white; }
-        .total-box { font-size: 20px; font-weight: bold; color: #8b0000; text-align: right; margin: 15px 0; }
-        .btn-edit { background-color: #ff8c00; padding: 6px 12px; font-size: 13px; margin-right: 5px; }
-        .btn-pay { background-color: #2e8b57; padding: 6px 12px; font-size: 13px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 420px; text-align: center; box-shadow: 0 0 15px rgba(0,0,0,0.3); }
-        .modal-content h2 { margin-top: 0; }
-        .modal-content input { margin-bottom: 15px; font-size: 18px; text-align: center; }
-        .badge-pendiente { background: #ffeeba; color: #856404; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .badge-cobrado { background: #d4edda; color: #155724; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .report-grid { display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap; }
-        .report-card { flex: 1; background: #fff8f8; border: 1px solid #ebccd1; padding: 15px; border-radius: 5px; min-width: 250px; }
-        .report-card h3 { margin-top: 0; border-bottom: 2px solid #8b0000; padding-bottom: 5px; }
-        .cierre-box { background: #e9ecef; padding: 15px; border-radius: 6px; margin-top: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .badge-pendiente { background-color: #ffcc00; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .badge-cobrado { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .cierre-box { display: flex; justify-content: space-between; align-items: center; background: #eef; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 400px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
+        /* Estilos responsivos para celulares */
+        @media (max-width: 768px) {
+            body { margin: 10px; font-size: 14px; }
+            .container { padding: 12px; }
+            .item-row { flex-direction: column; align-items: stretch; gap: 5px; }
+            .item-row select.platoSelect, .item-row select.tipoSelect, .item-row .price-field, .item-row .qty-field { width: 100%; flex: none; }
+            .cierre-box { flex-direction: column; align-items: stretch; gap: 10px; }
+            button { width: 100%; padding: 12px; }
+            table { font-size: 12px; display: block; overflow-x: auto; white-space: nowrap; }
+            .modal-content { width: 90%; padding: 15px; }
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
         <h1>Asados y Parrilla D' Kylian 🥩</h1>
-
-        <h2 id="formTitle">Registrar Pedido</h2>
-        <input type="hidden" id="pedidoIdEdit" value="">
         
-        <div style="display: flex; gap: 15px;">
-            <div class="form-group" style="flex:1;">
-                <label>Cliente:</label>
-                <input type="text" id="cliente" placeholder="Nombre del cliente">
-            </div>
-            <div class="form-group" style="flex:1;">
-                <label>Mesa / Ubicación:</label>
-                <input type="text" id="mesa" placeholder="Ej: Mesa 1, Mesa 2, etc.">
+        <!-- Formulario Pedido -->
+        <div class="form-group">
+            <h2>Registrar Pedido</h2>
+            <input type="hidden" id="pedidoIdEdit" value="">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label>Cliente:</label>
+                    <input type="text" id="cliente" placeholder="Nombre del cliente">
+                </div>
+                <div style="flex: 1;">
+                    <label>Mesa / Ubicación:</label>
+                    <input type="text" id="mesa" placeholder="Ej: Mesa 1, Mesa 2, etc.">
+                </div>
             </div>
         </div>
 
-        <h3>Detalle de Platos</h3>
-        <div id="itemsContainer"></div>
-        <button type="button" onclick="agregarFila()" style="background-color: #555; margin-bottom: 15px; width: auto;">+ Agregar Item</button>
+        <div class="form-group">
+            <h3>Detalle de Platos</h3>
+            <div id="itemsContainer"></div>
+            <button type="button" onclick="agregarFila()">+ Agregar Item</button>
+        </div>
 
-        <div class="total-box" id="totalPedidoActual">Total Pedido: $0.00</div>
+        <div style="text-align: right; font-size: 20px; font-weight: bold; margin: 15px 0;" id="totalPedidoActual">
+            Total Pedido: $0.00
+        </div>
 
-        <button type="button" id="btnGuardar" onclick="guardarPedido()" style="width: 100%; font-size: 18px; padding: 12px;">Guardar Pedido</button>
-        <button type="button" id="btnCancelarEdit" onclick="cancelarEdicion()" style="background-color: #666; width: 100%; margin-top: 8px; display:none;">Cancelar Edición</button>
+        <button type="button" onclick="guardarPedido()" style="width: 100%; padding: 15px; font-size: 18px;" id="btnGuardar">Guardar Pedido</button>
 
         <hr style="margin: 30px 0;">
 
-        <h2>📊 Reporte del Día (Platos Cobrados)</h2>
-        <div class="report-grid">
-            <div class="report-card">
-                <h3>🥩 Carnes</h3>
-                <ul id="listaCarnes" style="padding-left: 20px; margin:0;"></ul>
-            </div>
-            <div class="report-card">
-                <h3>🍟 Porciones</h3>
-                <ul id="listaPorciones" style="padding-left: 20px; margin:0;"></ul>
-            </div>
-            <div class="report-card">
-                <h3>🥤 Bebidas</h3>
-                <ul id="listaBebidas" style="padding-left: 20px; margin:0;"></ul>
-            </div>
-        </div>
+        <!-- Resumen del Día -->
+        <h2>Reporte del Día (Platos Cobrados)</h2>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;" id="resumenContenedor"></div>
 
         <div class="cierre-box">
             <div>
-                <h3 style="margin:0; color: #333;">Fin de Jornada</h3>
-                <p style="margin: 5px 0 0 0; font-size: 13px; color: #666;">Realiza el cierre para limpiar el día y guardarlo en el historial.</p>
+                <strong>Fin de Jornada</strong><br>
+                <small>Realiza el cierre para limpiar el día y guardarlo en el historial.</small>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="realizarCierreDia()" style="background-color: #d9534f;">🔒 Hacer Cierre de Día</button>
-                <button onclick="abrirHistorial()" style="background-color: #337ab7;">📂 Ver Días Anteriores</button>
+            <div>
+                <button type="button" onclick="hacerCierre()" style="background: #d9534f; margin-right: 5px;">🔒 Hacer Cierre de Día</button>
+                <button type="button" onclick="verHistorico()" style="background: #0275d8;">📁 Ver Días Anteriores</button>
             </div>
         </div>
 
         <hr style="margin: 30px 0;">
 
+        <!-- Listado de Pedidos -->
         <h2>Lista de Pedidos del Día</h2>
-        <div class="total-box" id="totalRecaudado" style="color: #2e8b57;">Total Recaudado Día: $0.00</div>
-
-        <table id="tablaPedidos">
+        <div style="text-align: right; font-size: 18px; font-weight: bold; margin: 10px 0;" id="totalRecaudadoDia">
+            Total Recaudado Día: $0.00
+        </div>
+        <table>
             <thead>
                 <tr>
                     <th>#</th>
@@ -111,55 +111,59 @@
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="tablaPedidosBody">
+                <tr><td colspan="7" style="text-align: center;">Cargando pedidos...</td></tr>
+            </tbody>
         </table>
     </div>
 
-    <!-- MODAL DE COBRO -->
-    <div id="modalCobro" class="modal">
+    <!-- Modal Cobrar -->
+    <div id="modalCobrar" class="modal">
         <div class="modal-content">
-            <h2 style="color: #2e8b57;">Cobrar Pedido #<span id="cobroPedidoId"></span></h2>
-            <p>Total a cobrar: <strong id="cobroTotalTexto" style="font-size: 22px; color: #8b0000;">$0.00</strong></p>
+            <h3>Cobrar Pedido #<span id="modalIdPedido"></span></h3>
+            <p><strong>Cliente:</strong> <span id="modalCliente"></span></p>
+            <p><strong>Total a Pagar:</strong> $<span id="modalTotal"></span></p>
             
-            <label style="text-align: left; display: block; margin-top: 15px;">Efectivo Recibido ($):</label>
-            <input type="number" id="efectivoRecibido" placeholder="0.00" step="0.05" oninput="calcularVueltoModal()">
-
-            <div style="background: #f4f4f9; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-                <span style="font-size: 14px; color: #555;">Vuelto / Cambio:</span>
-                <div id="vueltoResultado" style="font-size: 24px; font-weight: bold; color: green;">$0.00</div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Efectivo Recibido ($):</label>
+                <input type="number" id="efectivoRecibido" step="0.01" placeholder="0.00" oninput="calcularVuelto()">
             </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button onclick="confirmarCobro()" style="background-color: #2e8b57; flex: 1;">Finalizar Cobro</button>
-                <button onclick="cerrarModalCobro()" style="background-color: #666; flex: 1;">Cerrar</button>
+            
+            <p style="font-size: 18px; font-weight: bold; color: #28a745;">Vuelto: $<span id="lblVuelto">0.00</span></p>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="confirmarCobro()" style="background: #28a745; flex: 1;">Confirmar Cobro</button>
+                <button type="button" onclick="cerrarModalCobro()" style="background: #6c757d; flex: 1;">Cancelar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL HISTORIAL DE CIERRES -->
-    <div id="modalHistorial" class="modal">
-        <div class="modal-content" style="width: 600px; text-align: left;">
-            <h2 style="color: #337ab7; text-align: center;">📂 Historial de Días Anteriores</h2>
-            <div id="contenidoHistorial" style="max-height: 400px; overflow-y: auto; margin-bottom: 15px;"></div>
-            <button onclick="cerrarHistorial()" style="background-color: #666; width: 100%;">Cerrar Ventana</button>
+    <!-- Modal Histórico -->
+    <div id="modalHistorico" class="modal">
+        <div class="modal-content" style="width: 600px; max-height: 80vh; overflow-y: auto;">
+            <h3>Histórico de Cierres Anteriores</h3>
+            <div id="contenidoHistorico"></div>
+            <button type="button" onclick="cerrarModalHistorico()" style="background: #6c757d; width: 100%; margin-top: 15px;">Cerrar</button>
         </div>
     </div>
 
     <script>
         let menuGlobal = [];
-        let pedidosGlobal = [];
         let historicoGlobal = [];
-        let pedidoACobrar = null;
 
         async function cargarMenu() {
-            const res = await fetch('/api/menu');
-            menuGlobal = await res.json();
-            if (document.querySelectorAll('.item-row').length === 0) {
-                agregarFila();
+            try {
+                const res = await fetch('/api/menu');
+                menuGlobal = await res.json();
+                if(document.querySelectorAll('.item-row').length === 0) {
+                    agregarFila();
+                }
+            } catch (error) {
+                console.error("Error al cargar menú:", error);
             }
         }
 
-       function generarOpcionesMenu() {
+        function generarOpcionesMenu() {
             const categorias = ["Carnes", "Porciones", "Bebidas"];
             let html = '<option value="">-- Seleccionar Producto --</option>';
 
@@ -169,7 +173,6 @@
                     html += `<optgroup label="--- ${cat.toUpperCase()} ---">`;
                     productos.forEach(p => {
                         html += `<option value="${p.id}">${p.nombre}</option>`;
-                        
                         if (cat === "Carnes") {
                             html += `<option value="${p.id}_moro">   ↳ ${p.nombre} (Arroz Moro)</option>`;
                             html += `<option value="${p.id}_blanco">   ↳ ${p.nombre} (Arroz Blanco)</option>`;
@@ -180,57 +183,49 @@
             });
             return html;
         }
-        }
 
         function agregarFila(platoId = null, tipoConsumo = 'Mesa', precioCustom = null, cantidad = 1) {
             const container = document.getElementById('itemsContainer');
-            const newRow = document.createElement('div');
-            newRow.className = 'item-row';
+            const row = document.createElement('div');
+            row.className = 'item-row';
             
-            newRow.innerHTML = `
-                <select class="platoSelect" onchange="seleccionarPlato(this)">
+            row.innerHTML = `
+                <select class="platoSelect" onchange="cambiarPlato(this)">
                     ${generarOpcionesMenu()}
                 </select>
                 <select class="tipoSelect" onchange="cambiarTipoItem(this)">
-                    <option value="Mesa" ${tipoConsumo === 'Mesa' ? 'selected' : ''}>Mesa / Local</option>
-                    <option value="Llevar" ${tipoConsumo === 'Llevar' ? 'selected' : ''}>Para Llevar (+$0.50)</option>
+                    <option value="Mesa" ${tipoConsumo === 'Mesa' ? 'selected' : ''}>Mesa</option>
+                    <option value="Llevar" ${tipoConsumo === 'Llevar' ? 'selected' : ''}>Llevar</option>
                 </select>
-                <div class="price-field">
-                    <label style="font-size:10px;">Precio ($):</label>
-                    <input type="number" class="precioInput" step="0.25" value="${precioCustom || 0.00}" oninput="calcularTotalPedido()">
-                </div>
-                <div class="qty-field">
-                    <label style="font-size:10px;">Cant:</label>
-                    <input type="number" class="cantidadInput" value="${cantidad}" min="1" oninput="calcularTotalPedido()">
-                </div>
-                <button type="button" onclick="eliminarFila(this)">X</button>
+                <input type="number" class="price-field precioInput" step="0.01" value="${precioCustom !== null ? precioCustom : '0.00'}" placeholder="Precio" oninput="calcularTotalPedido()">
+                <input type="number" class="qty-field cantidadInput" min="1" value="${cantidad}" placeholder="Cant" oninput="calcularTotalPedido()">
+                <button type="button" onclick="this.parentElement.remove(); calcularTotalPedido();">X</button>
             `;
+            container.appendChild(row);
 
-            container.appendChild(newRow);
-
-            if (platoId) {
-                const select = newRow.querySelector('.platoSelect');
-                select.value = platoId;
-                if (precioCustom !== null) {
-                    newRow.querySelector('.precioInput').value = precioCustom;
-                }
-            } else {
-                seleccionarPlato(newRow.querySelector('.platoSelect'));
+            if (platoId !== null) {
+                row.querySelector('.platoSelect').value = platoId;
+                cambiarPlato(row.querySelector('.platoSelect'), false);
             }
-
-            calcularTotalPedido();
         }
 
-        function seleccionarPlato(selectElem) {
+        function cambiarPlato(selectElem, actualizarPrecioDefault = true) {
             const row = selectElem.parentElement;
-            const pId = parseInt(selectElem.value);
+            const rawVal = selectElem.value;
+            let pId = rawVal;
+            if (typeof rawVal === 'string' && rawVal.includes('_')) {
+                pId = parseInt(rawVal.split('_')[0]);
+            } else {
+                pId = parseInt(rawVal);
+            }
+
             const plato = menuGlobal.find(p => p.id === pId);
             const precioInput = row.querySelector('.precioInput');
-            const tipoSelect = row.querySelector('.tipoSelect').value;
+            const tipo = row.querySelector('.tipoSelect').value;
 
-            if (plato) {
+            if (plato && actualizarPrecioDefault) {
                 let precioBase = plato.precio;
-                if (tipoSelect === 'Llevar' && (plato.categoria === 'Carnes' || plato.categoria === 'Porciones')) {
+                if (tipo === 'Llevar' && (plato.categoria === 'Carnes' || plato.categoria === 'Porciones')) {
                     precioBase += 0.50;
                 }
                 precioInput.value = precioBase.toFixed(2);
@@ -240,7 +235,14 @@
 
         function cambiarTipoItem(tipoSelectElem) {
             const row = tipoSelectElem.parentElement;
-            const pId = parseInt(row.querySelector('.platoSelect').value);
+            const rawVal = row.querySelector('.platoSelect').value;
+            let pId = rawVal;
+            if (typeof rawVal === 'string' && rawVal.includes('_')) {
+                pId = parseInt(rawVal.split('_')[0]);
+            } else {
+                pId = parseInt(rawVal);
+            }
+
             const plato = menuGlobal.find(p => p.id === pId);
             const precioInput = row.querySelector('.precioInput');
             const tipo = tipoSelectElem.value;
@@ -255,20 +257,13 @@
             calcularTotalPedido();
         }
 
-        function eliminarFila(btn) {
-            const rows = document.querySelectorAll('.item-row');
-            if (rows.length > 1) {
-                btn.parentElement.remove();
-                calcularTotalPedido();
-            }
-        }
-
         function calcularTotalPedido() {
+            const rows = document.querySelectorAll('.item-row');
             let total = 0;
-            document.querySelectorAll('.item-row').forEach(row => {
+            rows.forEach(row => {
                 const precio = parseFloat(row.querySelector('.precioInput').value) || 0;
-                const cant = parseInt(row.querySelector('.cantidadInput').value) || 0;
-                total += precio * cant;
+                const cantidad = parseInt(row.querySelector('.cantidadInput').value) || 0;
+                total += precio * cantidad;
             });
             document.getElementById('totalPedidoActual').textContent = `Total Pedido: $${total.toFixed(2)}`;
             return total;
@@ -278,29 +273,28 @@
             const idEdit = document.getElementById('pedidoIdEdit').value;
             const cliente = document.getElementById('cliente').value;
             const mesa = document.getElementById('mesa').value || "Mesa 1";
-            
+
             const rows = document.querySelectorAll('.item-row');
             const items = [];
             rows.forEach(row => {
-              const rawPlatoVal = row.querySelector('.platoSelect').value;
-            const tipoConsumo = row.querySelector('.tipoSelect').value;
-            const precioUnitario = parseFloat(row.querySelector('.precioInput').value);
-            const cantidad = parseInt(row.querySelector('.cantidadInput').value);
+                const rawPlatoVal = row.querySelector('.platoSelect').value;
+                const tipoConsumo = row.querySelector('.tipoSelect').value;
+                const precioUnitario = parseFloat(row.querySelector('.precioInput').value);
+                const cantidad = parseInt(row.querySelector('.cantidadInput').value);
 
-            if (rawPlatoVal && cantidad > 0) {
-                let platoId = rawPlatoVal;
-                if (typeof rawPlatoVal === 'string' && rawPlatoVal.includes('_')) {
-                    platoId = rawPlatoVal; 
-                } else {
-                    platoId = parseInt(rawPlatoVal);
-                }
-                items.push({ platoId, tipoConsumo, precioUnitario, cantidad });
-            }
-            }
+                if (rawPlatoVal && cantidad > 0) {
+                    let platoId = rawPlatoVal;
+                    if (typeof rawPlatoVal !== 'string' || !rawPlatoVal.includes('_')) {
+                        platoId = parseInt(rawPlatoVal);
+                    }
+                    items.push({ platoId, tipoConsumo, precioUnitario, cantidad });
                 }
             });
 
-            if (items.length === 0) return alert('Selecciona al menos un plato válido');
+            if (items.length === 0) {
+                alert("Agrega al menos un plato al pedido.");
+                return;
+            }
 
             const url = idEdit ? `/api/pedidos/${idEdit}` : '/api/pedidos';
             const method = idEdit ? 'PUT' : 'POST';
@@ -312,206 +306,116 @@
             });
 
             if (res.ok) {
-                alert(idEdit ? '¡Pedido modificado correctamente!' : '¡Pedido registrado!');
-                cancelarEdicion();
+                alert(idEdit ? "¡Pedido actualizado con éxito!" : "¡Pedido registrado con éxito!");
+                limpiarFormulario();
                 cargarPedidos();
+            } else {
+                alert("Error al guardar el pedido");
             }
         }
 
-        function editarPedido(id) {
-            const p = pedidosGlobal.find(ped => ped.id === id);
-            if (!p) return;
-
-            document.getElementById('formTitle').textContent = `Editando Pedido #${p.id}`;
-            document.getElementById('pedidoIdEdit').value = p.id;
-            document.getElementById('cliente').value = p.cliente;
-            document.getElementById('mesa').value = p.mesa;
-            document.getElementById('btnGuardar').textContent = 'Guardar Cambios del Pedido';
-            document.getElementById('btnCancelarEdit').style.display = 'block';
-
-            const container = document.getElementById('itemsContainer');
-            container.innerHTML = '';
-            p.detalle.forEach(d => {
-                agregarFila(d.platoId, d.tipoConsumo || 'Mesa', d.precioUnitario, d.cantidad);
-            });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function cancelarEdicion() {
-            document.getElementById('formTitle').textContent = 'Registrar Pedido';
+        function limpiarFormulario() {
             document.getElementById('pedidoIdEdit').value = '';
             document.getElementById('cliente').value = '';
             document.getElementById('mesa').value = '';
-            document.getElementById('btnGuardar').textContent = 'Guardar Pedido';
-            document.getElementById('btnCancelarEdit').style.display = 'none';
             document.getElementById('itemsContainer').innerHTML = '';
             agregarFila();
+            document.getElementById('btnGuardar').textContent = "Guardar Pedido";
+            calcularTotalPedido();
         }
 
         async function cargarPedidos() {
-            const res = await fetch('/api/pedidos');
-            const data = await res.json();
-            pedidosGlobal = data.pedidos;
-            historicoGlobal = data.historicoCierres;
-            
-            document.getElementById('totalRecaudado').textContent = `Total Recaudado Día: $${data.totalDineroRecaudado.toFixed(2)}`;
-            
-            actualizarReporte(data.resumenProductos);
+            try {
+                const res = await fetch('/api/pedidos');
+                const data = await res.json();
+                
+                document.getElementById('totalRecaudadoDia').textContent = `Total Recaudado Día: $${data.totalDineroRecaudado.toFixed(2)}`;
+                historicoGlobal = data.historicoCierres;
 
-            const tbody = document.querySelector('#tablaPedidos tbody');
-            tbody.innerHTML = '';
-
-            data.pedidos.forEach(p => {
-                const detalleTexto = p.detalle.map(d => {
-                    const tagLlevar = d.tipoConsumo === 'Llevar' ? ' (Para Llevar)' : '';
-                    return `${d.cantidad}x ${d.plato}${tagLlevar} ($${d.precioUnitario.toFixed(2)})`;
-                }).join('<br>');
-
-                const estadoBadge = p.estado === 'Cobrado' 
-                    ? `<span class="badge-cobrado">Cobrado</span>` 
-                    : `<span class="badge-pendiente">Pendiente</span>`;
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>#${p.id}</strong></td>
-                    <td>${p.cliente}</td>
-                    <td>${p.mesa}</td>
-                    <td><small>${detalleTexto}</small></td>
-                    <td><strong>$${p.total.toFixed(2)}</strong></td>
-                    <td>${estadoBadge}</td>
-                    <td>
-                        <button class="btn-edit" onclick="editarPedido(${p.id})">Editar</button>
-                        <button class="btn-pay" onclick="abrirModalCobro(${p.id})">Cobrar 💵</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function actualizarReporte(resumen) {
-            const listaCarnes = document.getElementById('listaCarnes');
-            const listaPorciones = document.getElementById('listaPorciones');
-            const listaBebidas = document.getElementById('listaBebidas');
-
-            listaCarnes.innerHTML = '';
-            listaPorciones.innerHTML = '';
-            listaBebidas.innerHTML = '';
-
-            for (let [nombre, info] of Object.entries(resumen)) {
-                const li = document.createElement('li');
-                li.innerHTML = `${nombre}: <strong>${info.cantidad}</strong>`;
-
-                if (info.categoria === 'Carnes') {
-                    listaCarnes.appendChild(li);
-                } else if (info.categoria === 'Porciones') {
-                    listaPorciones.appendChild(li);
-                } else if (info.categoria === 'Bebidas') {
-                    listaBebidas.appendChild(li);
+                // Renderizar Resumen
+                let resumenHTML = '';
+                for (let [nombre, info] of Object.entries(data.resumenProductos)) {
+                    if (info.cantidad > 0) {
+                        resumenHTML += `<div style="background: #fff; border: 1px solid #ccc; padding: 8px 12px; border-radius: 4px;">
+                            <strong>${nombre}:</strong> ${info.cantidad}
+                        </div>`;
+                    }
                 }
-            }
-        }
+                document.getElementById('resumenContenedor').innerHTML = resumenHTML || '<p>No hay platos cobrados aún hoy.</p>';
 
-        async function realizarCierreDia() {
-            if (!confirm('¿Estás seguro de hacer el Cierre de Día? Esto limpiará la pantalla actual y guardará el reporte completo en el historial.')) return;
-
-            const res = await fetch('/api/cierre-dia', { method: 'POST' });
-            const data = await res.json();
-
-            if (res.ok) {
-                alert(`${data.mensaje}\nFecha: ${data.fecha}\nTotal Recaudado: $${data.totalVentas.toFixed(2)}`);
-                cargarPedidos();
-            } else {
-                alert(data.error);
-            }
-        }
-
-        function abrirHistorial() {
-            const container = document.getElementById('contenidoHistorial');
-            container.innerHTML = '';
-
-            if (historicoGlobal.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#777;">No hay cierres de días anteriores registrados aún.</p>';
-            } else {
-                historicoGlobal.forEach((cierre) => {
-                    const div = document.createElement('div');
-                    div.style.cssText = "background: #f8f9fa; border: 1px solid #ddd; padding: 12px; border-radius: 6px; margin-bottom: 12px;";
+                // Renderizar Tabla Pedidos
+                let tbody = '';
+                data.pedidos.forEach(p => {
+                    let detalleStr = p.detalle.map(d => `${d.cantidad}x ${d.plato} (${d.tipoConsumo})`).join('<br>');
+                    let estadoBadge = p.estado === 'Cobrado' ? '<span class="badge-cobrado">Cobrado</span>' : '<span class="badge-pendiente">Pendiente</span>';
                     
-                    let resumenTexto = "<strong>📊 Platos Totales Vendidos:</strong><br>";
-                    for (let [nombre, info] of Object.entries(cierre.resumenProductos)) {
-                        if (info.cantidad > 0) {
-                            resumenTexto += `• ${nombre}: <b>${info.cantidad}</b><br>`;
-                        }
+                    let acciones = '';
+                    if (p.estado === 'Pendiente') {
+                        acciones = `
+                            <button onclick='editarPedido(${JSON.stringify(p)})' style="background: #f0ad4e; padding: 5px 10px; font-size: 12px; margin-bottom: 3px;">Editar</button>
+                            <button onclick='abrirModalCobro(${JSON.stringify(p)})' style="background: #5cb85c; padding: 5px 10px; font-size: 12px;">Cobrar</button>
+                        `;
+                    } else {
+                        acciones = `<small>Efectivo: $${p.efectivoRecibido?.toFixed(2) || '0.00'}<br>Vuelto: $${p.vuelto?.toFixed(2) || '0.00'}</small>`;
                     }
 
-                    let detallePedidos = cierre.pedidosDelDia.map(p => {
-                        const platosPedidods = p.detalle.map(d => `${d.cantidad}x ${d.plato}`).join(', ');
-                        return `• <b>Pedido #${p.id}</b> (${p.cliente} - ${p.mesa}): $${p.total.toFixed(2)} [${p.estado}]<br>&nbsp;&nbsp;&nbsp;<i>Platos: ${platosPedidods}</i>`;
-                    }).join('<br>');
-
-                    div.innerHTML = `
-                        <strong>📅 Cierre del Día: ${cierre.fecha}</strong><br>
-                        <span style="color: #2e8b57; font-weight: bold; font-size: 16px;">Total Ventas: $${cierre.totalVentas.toFixed(2)}</span> (${cierre.totalPedidos} pedidos)<br>
-                        
-                        <details style="margin-top: 8px; cursor: pointer; background: #fff8f8; padding: 6px; border: 1px solid #ebccd1; border-radius: 4px;">
-                            <summary style="font-size: 13px; color: #8b0000; font-weight: bold;">📦 Ver Totales de Platos Vendidos</summary>
-                            <div style="font-size: 13px; margin-top: 5px; padding-left: 10px; color: #333;">${resumenTexto}</div>
-                        </details>
-
-                        <details style="margin-top: 5px; cursor: pointer; background: #ffffff; padding: 6px; border: 1px solid #eee; border-radius: 4px;">
-                            <summary style="font-size: 13px; color: #337ab7; font-weight: bold;">📜 Ver Detalle Pedido por Pedido</summary>
-                            <div style="font-size: 12px; margin-top: 5px; padding-left: 10px;">${detallePedidos}</div>
-                        </details>
+                    tbody += `
+                        <tr>
+                            <td>${p.id}</td>
+                            <td>${p.cliente}</td>
+                            <td>${p.mesa}</td>
+                            <td>${detalleStr}</td>
+                            <td>$${p.total.toFixed(2)}</td>
+                            <td>${estadoBadge}</td>
+                            <td>${acciones}</td>
+                        </tr>
                     `;
-                    container.appendChild(div);
                 });
+                document.getElementById('tablaPedidosBody').innerHTML = tbody || '<tr><td colspan="7" style="text-align: center;">No hay pedidos registrados hoy.</td></tr>';
+
+            } catch (error) {
+                console.error("Error al cargar pedidos:", error);
             }
-
-            document.getElementById('modalHistorial').style.display = 'flex';
         }
 
-        function cerrarHistorial() {
-            document.getElementById('modalHistorial').style.display = 'none';
+        function editarPedido(pedido) {
+            document.getElementById('pedidoIdEdit').value = pedido.id;
+            document.getElementById('cliente').value = pedido.cliente;
+            document.getElementById('mesa').value = pedido.mesa;
+            document.getElementById('itemsContainer').innerHTML = '';
+
+            pedido.detalle.forEach(d => {
+                agregarFila(d.platoId, d.tipoConsumo, d.precioUnitario, d.cantidad);
+            });
+
+            document.getElementById('btnGuardar').textContent = "Actualizar Pedido";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function abrirModalCobro(id) {
-            pedidoACobrar = pedidosGlobal.find(p => p.id === id);
-            if (!pedidoACobrar) return;
-
-            document.getElementById('cobroPedidoId').textContent = pedidoACobrar.id;
-            document.getElementById('cobroTotalTexto').textContent = `$${pedidoACobrar.total.toFixed(2)}`;
+        let pedidoACobrar = null;
+        function abrirModalCobro(pedido) {
+            pedidoACobrar = pedido;
+            document.getElementById('modalIdPedido').textContent = pedido.id;
+            document.getElementById('modalCliente').textContent = pedido.cliente;
+            document.getElementById('modalTotal').textContent = pedido.total.toFixed(2);
             document.getElementById('efectivoRecibido').value = '';
-            document.getElementById('vueltoResultado').textContent = '$0.00';
-            document.getElementById('vueltoResultado').style.color = 'green';
-            document.getElementById('modalCobro').style.display = 'flex';
-        }
-
-        function calcularVueltoModal() {
-            if (!pedidoACobrar) return;
-            const efectivo = parseFloat(document.getElementById('efectivoRecibido').value) || 0;
-            const cambio = efectivo - pedidoACobrar.total;
-            const resDiv = document.getElementById('vueltoResultado');
-
-            if (efectivo === 0) {
-                resDiv.textContent = '$0.00';
-                resDiv.style.color = 'green';
-            } else if (cambio < 0) {
-                resDiv.textContent = `Faltan $${Math.abs(cambio).toFixed(2)}`;
-                resDiv.style.color = 'red';
-            } else {
-                resDiv.textContent = `$${cambio.toFixed(2)}`;
-                resDiv.style.color = 'green';
-            }
+            document.getElementById('lblVuelto').textContent = '0.00';
+            document.getElementById('modalCobrar').style.display = 'flex';
         }
 
         function cerrarModalCobro() {
-            document.getElementById('modalCobro').style.display = 'none';
+            document.getElementById('modalCobrar').style.display = 'none';
             pedidoACobrar = null;
         }
 
-        async function confirmarCobro() {
-            if (!pedidoACobrar) return;
+        function calcularVuelto() {
             const efectivo = parseFloat(document.getElementById('efectivoRecibido').value) || 0;
+            const vuelto = efectivo - (pedidoACobrar ? pedidoACobrar.total : 0);
+            document.getElementById('lblVuelto').textContent = vuelto >= 0 ? vuelto.toFixed(2) : '0.00';
+        }
 
+        async function confirmarCobro() {
+            const efectivo = parseFloat(document.getElementById('efectivoRecibido').value) || 0;
             if (efectivo < pedidoACobrar.total) {
                 alert('El efectivo recibido es menor al total del pedido.');
                 return;
@@ -532,23 +436,43 @@
             }
         }
 
-        // Inicializar la aplicación al cargar la página
+        async function hacerCierre() {
+            if (!confirm("¿Estás seguro de realizar el cierre de día? Esto limpiará los pedidos actuales y guardará el reporte.")) return;
+
+            const res = await fetch('/api/cierre-dia', { method: 'POST' });
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(data.mensaje);
+                cargarPedidos();
+            } else {
+                alert(data.error || "Error al realizar el cierre");
+            }
+        }
+
+        function verHistorico() {
+            let html = '';
+            if (historicoGlobal.length === 0) {
+                html = '<p>No hay cierres anteriores registrados.</p>';
+            } else {
+                historicoGlobal.forEach(c => {
+                    html += `<div style="border-bottom: 1px solid #ddd; margin-bottom: 15px; padding-bottom: 10px;">
+                        <strong>Fecha:</strong> ${c.fecha} | <strong>Total Ventas:</strong> $${c.totalVentas.toFixed(2)} | <strong>Pedidos:</strong> ${c.totalPedidos}
+                    </div>`;
+                });
+            }
+            document.getElementById('contenidoHistorico').innerHTML = html;
+            document.getElementById('modalHistorico').style.display = 'flex';
+        }
+
+        function cerrarModalHistorico() {
+            document.getElementById('modalHistorico').style.display = 'none';
+        }
+
         window.onload = async function() {
             await cargarMenu();
             await cargarPedidos();
         };
     </script>
-<style>
-    @media (max-width: 768px) {
-        body { margin: 10px; font-size: 14px; }
-        .container { padding: 12px; }
-        .item-row { flex-direction: column; align-items: stretch; gap: 5px; }
-        .item-row select.platoSelect, .item-row select.tipoSelect, .item-row .price-field, .item-row .qty-field { width: 100%; flex: none; }
-        .cierre-box { flex-direction: column; align-items: stretch; gap: 10px; }
-        button { width: 100%; padding: 12px; }
-        table { font-size: 12px; display: block; overflow-x: auto; white-space: nowrap; }
-        .modal-content { width: 90%; padding: 15px; }
-    }
-</style>
 </body>
 </html>
