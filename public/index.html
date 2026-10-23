@@ -159,7 +159,7 @@
             }
         }
 
-        function generarOpcionesMenu() {
+       function generarOpcionesMenu() {
             const categorias = ["Carnes", "Porciones", "Bebidas"];
             let html = '<option value="">-- Seleccionar Producto --</option>';
 
@@ -169,11 +169,17 @@
                     html += `<optgroup label="--- ${cat.toUpperCase()} ---">`;
                     productos.forEach(p => {
                         html += `<option value="${p.id}">${p.nombre}</option>`;
+                        
+                        if (cat === "Carnes") {
+                            html += `<option value="${p.id}_moro">   ↳ ${p.nombre} (Arroz Moro)</option>`;
+                            html += `<option value="${p.id}_blanco">   ↳ ${p.nombre} (Arroz Blanco)</option>`;
+                        }
                     });
                     html += `</optgroup>`;
                 }
             });
             return html;
+        }
         }
 
         function agregarFila(platoId = null, tipoConsumo = 'Mesa', precioCustom = null, cantidad = 1) {
@@ -276,13 +282,21 @@
             const rows = document.querySelectorAll('.item-row');
             const items = [];
             rows.forEach(row => {
-                const platoId = parseInt(row.querySelector('.platoSelect').value);
-                const tipoConsumo = row.querySelector('.tipoSelect').value;
-                const precioUnitario = parseFloat(row.querySelector('.precioInput').value);
-                const cantidad = parseInt(row.querySelector('.cantidadInput').value);
-                
-                if (platoId && cantidad > 0) {
-                    items.push({ platoId, tipoConsumo, precioUnitario, cantidad });
+              const rawPlatoVal = row.querySelector('.platoSelect').value;
+            const tipoConsumo = row.querySelector('.tipoSelect').value;
+            const precioUnitario = parseFloat(row.querySelector('.precioInput').value);
+            const cantidad = parseInt(row.querySelector('.cantidadInput').value);
+
+            if (rawPlatoVal && cantidad > 0) {
+                let platoId = rawPlatoVal;
+                if (typeof rawPlatoVal === 'string' && rawPlatoVal.includes('_')) {
+                    platoId = rawPlatoVal; 
+                } else {
+                    platoId = parseInt(rawPlatoVal);
+                }
+                items.push({ platoId, tipoConsumo, precioUnitario, cantidad });
+            }
+            }
                 }
             });
 
