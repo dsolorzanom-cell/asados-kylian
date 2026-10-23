@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -142,6 +142,23 @@ app.put('/api/pedidos/:id', (req, res) => {
     if (estado) pedidos[pedidoIndex].estado = estado;
 
     res.json({ mensaje: "Pedido actualizado", pedido: pedidos[pedidoIndex] });
+});
+
+// NUEVA RUTA PARA PROCESAR EL COBRO
+app.post('/api/pedidos/:id/cobrar', (req, res) => {
+    const id = parseInt(req.params.id);
+    const { efectivoRecibido } = req.body;
+    const pedido = pedidos.find(p => p.id === id);
+
+    if (!pedido) {
+        return res.status(404).json({ error: "Pedido no encontrado" });
+    }
+
+    pedido.estado = "Cobrado";
+    pedido.efectivoRecibido = parseFloat(efectivoRecibido) || pedido.total;
+    pedido.vuelto = pedido.efectivoRecibido - pedido.total;
+
+    res.json({ mensaje: "¡Pedido cobrado con éxito!", pedido });
 });
 
 app.post('/api/cierre-dia', (req, res) => {
