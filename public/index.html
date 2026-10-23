@@ -480,3 +480,49 @@
             if (efectivo === 0) {
                 resDiv.textContent = '$0.00';
                 resDiv.style.color = 'green';
+            } else if (cambio < 0) {
+                resDiv.textContent = `Faltan $${Math.abs(cambio).toFixed(2)}`;
+                resDiv.style.color = 'red';
+            } else {
+                resDiv.textContent = `$${cambio.toFixed(2)}`;
+                resDiv.style.color = 'green';
+            }
+        }
+
+        function cerrarModalCobro() {
+            document.getElementById('modalCobro').style.display = 'none';
+            pedidoACobrar = null;
+        }
+
+        async function confirmarCobro() {
+            if (!pedidoACobrar) return;
+            const efectivo = parseFloat(document.getElementById('efectivoRecibido').value) || 0;
+
+            if (efectivo < pedidoACobrar.total) {
+                alert('El efectivo recibido es menor al total del pedido.');
+                return;
+            }
+
+            const res = await fetch(`/api/pedidos/${pedidoACobrar.id}/cobrar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ efectivoRecibido: efectivo })
+            });
+
+            if (res.ok) {
+                alert('¡Pedido cobrado con éxito!');
+                cerrarModalCobro();
+                cargarPedidos();
+            } else {
+                alert('Error al procesar el cobro');
+            }
+        }
+
+        // Inicializar la aplicación al cargar la página
+        window.onload = async function() {
+            await cargarMenu();
+            await cargarPedidos();
+        };
+    </script>
+</body>
+</html>
