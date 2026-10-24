@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Conexión a MongoDB
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:parrilla2026@cluster0.mongodb.net/asadoskylian?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://comercialajoyventas_db_user:N4DAZ2KCts0goaAZ@cluster0.mongodb.net/asadoskylian?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Conectado a MongoDB Atlas'))
