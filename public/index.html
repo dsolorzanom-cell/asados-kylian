@@ -168,28 +168,31 @@
             let html = '<option value="">-- Seleccionar Producto --</option>';
 
             categorias.forEach(cat => {
-                const productos = menuGlobal.filter(p => p.categoria === cat);
-                if (productos.length > 0) {
-                    html += `<optgroup label="--- ${cat.toUpperCase()} ---">`;
-                    productos.forEach(p => {
-                        html += `<option value="${p.id}">${p.nombre}</option>`;
-                        if (cat === "Carnes") {
-                            html += `<option value="${p.id}_moro">   ↳ ${p.nombre} (Arroz Moro)</option>`;
-                            html += `<option value="${p.id}_blanco">   ↳ ${p.nombre} (Arroz Blanco)</option>`;
-                        }
-                    });
-                    html += `</optgroup>`;
-                }
+           function generarOpcionesMenu() {
+            // Lista fija y limpia de productos con sus nombres exactos y precios fijos
+            const menuPersonalizado = [
+                { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Carnes" },
+                { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Carnes" },
+                { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Carnes" },
+                { id: 4, nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, categoria: "Carnes" },
+                { id: 5, nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, categoria: "Carnes" },
+                { id: 6, nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, categoria: "Carnes" },
+                { id: 7, nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, categoria: "Carnes" },
+                { id: 8, nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, categoria: "Carnes" },
+                { id: 9, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Porciones" },
+                { id: 10, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Porciones" },
+                { id: 11, nombre: "TERNERA ASADA", precio: 3.00, categoria: "Carnes" }
+            ];
+
+            // Actualizamos la variable global menuGlobal para que el resto de funciones lean los precios correctos
+            menuGlobal = menuPersonalizado;
+
+            let html = '<option value="">-- Seleccionar Producto --</option>';
+            menuGlobal.forEach(p => {
+                html += `<option value="${p.id}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
             });
             return html;
         }
-
-        function agregarFila(platoId = null, tipoConsumo = 'Mesa', precioCustom = null, cantidad = 1) {
-            const container = document.getElementById('itemsContainer');
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            
-            row.innerHTML = `
                 <select class="platoSelect" onchange="cambiarPlato(this)">
                     ${generarOpcionesMenu()}
                 </select>
