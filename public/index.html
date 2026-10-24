@@ -37,10 +37,7 @@
 
         header h1 { font-size: 1.4rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
 
-        .nav-tabs {
-            display: flex;
-            gap: 10px;
-        }
+        .nav-tabs { display: flex; gap: 10px; }
 
         .nav-btn {
             background: rgba(255,255,255,0.1);
@@ -60,11 +57,9 @@
         }
 
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-
         .view-section { display: none; }
         .view-section.active { display: block; }
 
-        /* Estilos POS / Pedidos */
         .pos-grid {
             display: grid;
             grid-template-columns: 1.2fr 1fr;
@@ -126,7 +121,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: 10px;
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
             padding-right: 5px;
         }
@@ -150,7 +145,7 @@
             background: #2f2f2f;
             transform: translateY(-2px);
         }
-        .menu-item-name { font-size: 0.8rem; font-weight: bold; line-height: 1.1; }
+        .menu-item-name { font-size: 0.75rem; font-weight: bold; line-height: 1.1; }
         .menu-item-price { font-size: 0.9rem; color: var(--accent); font-weight: bold; margin-top: 5px; }
 
         .order-items-list {
@@ -170,7 +165,6 @@
             border-bottom: 1px solid var(--border);
             font-size: 0.9rem;
         }
-
         .order-item-row:last-child { border-bottom: none; }
         .item-controls { display: flex; align-items: center; gap: 8px; }
         .item-controls button {
@@ -204,7 +198,6 @@
         }
         .btn-main:hover { background: var(--primary-dark); }
 
-        /* Lista de Comandas Activas */
         .comandas-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -225,10 +218,8 @@
         .comanda-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
         .comanda-title { font-weight: bold; font-size: 1.1rem; color: var(--accent); }
         .comanda-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #333; }
-
         .comanda-details { font-size: 0.9rem; margin-bottom: 12px; color: #ccc; max-height: 120px; overflow-y: auto; }
         .comanda-details div { padding: 3px 0; border-bottom: 1px dashed #2a2a2a; }
-
         .comanda-footer { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .comanda-actions { display: flex; gap: 5px; margin-top: 10px; }
         .comanda-actions button { flex: 1; padding: 6px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
@@ -236,7 +227,6 @@
         .btn-editar { background: #0277bd; color: white; }
         .btn-eliminar { background: var(--danger); color: white; }
 
-        /* Modal Cobro */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000;
@@ -246,7 +236,6 @@
         }
         .modal-content h3 { color: var(--accent); margin-bottom: 15px; }
 
-        /* Reportes */
         .report-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -266,8 +255,6 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--bg-card); border-radius: 8px; overflow: hidden; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         th { background: #252525; color: var(--accent); }
-
-        .acciones-tabla button { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8rem; margin-right: 3px; }
     </style>
 </head>
 <body>
@@ -286,7 +273,6 @@
         <!-- VISTA REGISTRAR PEDIDO -->
         <div id="vista-pos" class="view-section active">
             <div class="pos-grid">
-                <!-- Panel del Menú y Selección -->
                 <div class="card">
                     <h2 id="tituloFormulario">Nuevo Pedido</h2>
                     <input type="hidden" id="editPedidoId" value="">
@@ -311,11 +297,10 @@
 
                     <h3 style="margin-top: 15px;">Selecciona Productos:</h3>
                     <div class="menu-grid" id="menuGridContainer">
-                        <!-- Generado por JS -->
+                        <!-- Generado dinámicamente -->
                     </div>
                 </div>
 
-                <!-- Resumen de Cuenta Actual -->
                 <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <h3>Detalle del Pedido</h3>
@@ -336,21 +321,18 @@
             </div>
         </div>
 
-        <!-- VISTA COMANDAS ACTIVAS -->
+        <!-- VISTA COMANDAS -->
         <div id="vista-comandas" class="view-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h2>Comandas y Pedidos Activos</h2>
                 <button class="nav-btn" onclick="cargarComandas()">🔄 Actualizar</button>
             </div>
-            <div class="comandas-grid" id="comandasContainer">
-                <!-- Generado por JS -->
-            </div>
+            <div class="comandas-grid" id="comandasContainer"></div>
         </div>
 
         <!-- VISTA REPORTES -->
         <div id="vista-reportes" class="view-section">
             <h2>Reporte General del Día</h2>
-            
             <div class="report-stats" style="margin-top: 15px;">
                 <div class="stat-box">
                     <h4>Total Recaudado</h4>
@@ -411,7 +393,6 @@
     </div>
 
     <script>
-        // MENÚ OFICIAL EXACTO
         const menuOficial = [
             { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Principal" },
             { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Principal" },
@@ -427,4 +408,383 @@
             
             { id: 12, nombre: "ARROZ MORO", precio: 2.00, categoria: "Porcion" },
             { id: 13, nombre: "ARROZ BLANCO", precio: 2.00, categoria: "Porcion" },
-            { id: 14, nombre: "PATACONES", precio: 1.50, categoria: "Porcion"
+            { id: 14, nombre: "PATACONES", precio: 1.50, categoria: "Porcion" },
+            { id: 15, nombre: "TARRINA MENESTRA PEQUEÑA", precio: 1.25, categoria: "Porcion" },
+            { id: 16, nombre: "TARRINA MENESTRA GRANDE", precio: 2.50, categoria: "Porcion" },
+
+            { id: 17, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebida" },
+            { id: 18, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebida" },
+            { id: 19, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebida" },
+            { id: 20, nombre: "FUZE TEA LT", precio: 1.25, categoria: "Bebida" },
+            { id: 21, nombre: "AGUA", precio: 0.50, categoria: "Bebida" },
+            { id: 22, nombre: "COLA PERSONAL", precio: 0.50, categoria: "Bebida" }
+        ];
+
+        let pedidoActualItems = [];
+        let tipoPedidoSeleccionado = "Mesa";
+        let pedidoCobrandoGlobal = null;
+
+        function cambiarVista(vista) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            if (vista === 'pos') {
+                document.getElementById('vista-pos').classList.add('active');
+                event.target.classList.add('active');
+            } else if (vista === 'comandas') {
+                document.getElementById('vista-comandas').classList.add('active');
+                event.target.classList.add('active');
+                cargarComandas();
+            } else if (vista === 'reportes') {
+                document.getElementById('vista-reportes').classList.add('active');
+                event.target.classList.add('active');
+                cargarReportes();
+            }
+        }
+
+        function renderMenuGrid() {
+            const container = document.getElementById('menuGridContainer');
+            if (!container) return;
+            container.innerHTML = menuOficial.map(item => `
+                <button type="button" class="menu-item-btn" onclick="agregarItemPedido(${item.id})">
+                    <span class="menu-item-name">${item.nombre}</span>
+                    <span class="menu-item-price">$${item.precio.toFixed(2)}</span>
+                </button>
+            `).join('');
+        }
+
+        function setTipoPedido(tipo) {
+            tipoPedidoSelectorUi(tipo);
+            recalcularPreciosItems();
+        }
+
+        function tipoPedidoSelectorUi(tipo) {
+            tipoPedidoSeleccionado = tipo;
+            const botones = document.querySelectorAll('.tipo-btn');
+            botones.forEach(btn => {
+                if (btn.textContent.includes(tipo)) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function agregarItemPedido(idPlato) {
+            const plato = menuOficial.find(p => p.id === idPlato);
+            if (!plato) return;
+
+            let precioFinal = plato.precio;
+            if ((tipoPedidoSeleccionado === 'Llevar' || tipoPedidoSeleccionado === 'Domicilio') && (plato.categoria === 'Principal' || plato.categoria === 'Porcion')) {
+                precioFinal += 0.50;
+            }
+
+            const existente = pedidoActualItems.find(i => i.id === idPlato);
+            if (existente) {
+                existente.cantidad++;
+            } else {
+                pedidoActualItems.push({
+                    id: plato.id,
+                    nombre: plato.nombre,
+                    categoria: plato.categoria,
+                    precioBase: plato.precio,
+                    precioUnitario: precioFinal,
+                    cantidad: 1
+                });
+            }
+            renderPedidoActual();
+        }
+
+        function cambiarCantidad(idPlato, delta) {
+            const item = pedidoActualItems.find(i => i.id === idPlato);
+            if (!item) return;
+            item.cantidad += delta;
+            if (item.cantidad <= 0) {
+                pedidoActualItems = pedidoActualItems.filter(i => i.id !== idPlato);
+            }
+            renderPedidoActual();
+        }
+
+        function recalcularPreciosItems() {
+            pedidoActualItems.forEach(item => {
+                let precioFinal = item.precioBase;
+                if ((tipoPedidoSeleccionado === 'Llevar' || tipoPedidoSeleccionado === 'Domicilio') && (item.categoria === 'Principal' || item.categoria === 'Porcion')) {
+                    precioFinal += 0.50;
+                }
+                item.precioUnitario = precioFinal;
+            });
+            renderPedidoActual();
+        }
+
+        function renderPedidoActual() {
+            const container = document.getElementById('orderItemsContainer');
+            if (pedidoActualItems.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Sin ítems seleccionados</div>';
+                document.getElementById('labelTotalPedido').textContent = '$0.00';
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = pedidoActualItems.map(item => {
+                const sub = item.precioUnitario * item.cantidad;
+                total += sub;
+                return `
+                    <div class="order-item-row">
+                        <div>
+                            <strong>${item.nombre}</strong><br>
+                            <small style="color: var(--accent);">$${item.precioUnitario.toFixed(2)} c/u</small>
+                        </div>
+                        <div class="item-controls">
+                            <button type="button" onclick="cambiarCantidad(${item.id}, -1)">-</button>
+                            <span>${item.cantidad}</span>
+                            <button type="button" onclick="cambiarCantidad(${item.id}, 1)">+</button>
+                            <span style="min-width: 55px; text-align: right; font-weight: bold;">$${sub.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('labelTotalPedido').textContent = `$${total.toFixed(2)}`;
+        }
+
+        async function guardarPedido() {
+            const cliente = document.getElementById('inputCliente').value.trim() || "Consumidor Final";
+            const mesa = document.getElementById('inputMesa').value.trim() || (tipoPedidoSeleccionado === 'Mesa' ? 'Mesa 1' : tipoPedidoSeleccionado);
+            const idEdit = document.getElementById('editPedidoId').value;
+
+            if (pedidoActualItems.length === 0) {
+                alert("Agrega al menos un plato o bebida al pedido.");
+                return;
+            }
+
+            const total = pedidoActualItems.reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
+            
+            const payload = {
+                cliente,
+                mesa,
+                tipo: tipoPedidoSeleccionado,
+                detalle: pedidoActualItems.map(i => ({
+                    platoId: i.id,
+                    plato: i.nombre,
+                    tipoConsumo: tipoPedidoSeleccionado,
+                    precioUnitario: i.precioUnitario,
+                    cantidad: i.cantidad
+                })),
+                total,
+                estado: 'Pendiente'
+            };
+
+            const url = idEdit ? `/api/pedidos/${idEdit}` : '/api/pedidos';
+            const method = idEdit ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert(idEdit ? "¡Pedido actualizado con éxito!" : "¡Pedido registrado con éxito!");
+                    limpiarPedido();
+                    cambiarVista('comandas');
+                } else {
+                    alert("Error al guardar el pedido en el servidor.");
+                }
+            } catch (e) {
+                alert("Error de conexión al guardar el pedido.");
+            }
+        }
+
+        function limpiarPedido() {
+            pedidoActualItems = [];
+            document.getElementById('editPedidoId').value = '';
+            document.getElementById('inputCliente').value = '';
+            document.getElementById('inputMesa').value = '';
+            document.getElementById('tituloFormulario').textContent = 'Nuevo Pedido';
+            document.getElementById('btnGuardarPedido').textContent = 'Guardar Pedido';
+            setTipoPedido('Mesa');
+            renderPedidoActual();
+        }
+
+        async function cargarComandas() {
+            try {
+                const res = await fetch('/api/pedidos');
+                const data = await res.json();
+                const container = document.getElementById('comandasContainer');
+                
+                const pedidos = data.pedidos || [];
+                if (pedidos.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay pedidos activos.</p>';
+                    return;
+                }
+
+                container.innerHTML = pedidos.map(p => `
+                    <div class="comanda-card ${p.estado === 'Cobrado' ? 'cobrado' : ''}">
+                        <div class="comanda-header">
+                            <span class="comanda-title">#${p.id} - ${p.mesa}</span>
+                            <span class="comanda-badge">${p.estado}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--accent); margin-bottom: 5px;">Cliente: ${p.cliente}</div>
+                        <div class="comanda-details">
+                            ${p.detalle.map(d => `<div>${d.cantidad}x ${d.plato} <small>(${d.tipoConsumo})</small></div>`).join('')}
+                        </div>
+                        <div class="comanda-footer">
+                            <span>Total:</span>
+                            <span style="color: var(--accent);">$${p.total.toFixed(2)}</span>
+                        </div>
+                        <div class="comanda-actions">
+                            ${p.estado === 'Pendiente' ? `
+                                <button type="button" class="btn-editar" onclick='editarPedido(${JSON.stringify(p)})'>Editar</button>
+                                <button type="button" class="btn-cobrar" onclick='abrirModalCobro(${JSON.stringify(p)})'>Cobrar</button>
+                            ` : ''}
+                            <button type="button" class="btn-eliminar" onclick="eliminarPedido(${p.id})">Eliminar</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Error al cargar comandas", e);
+            }
+        }
+
+        function editarPedido(p) {
+            cambiarVista('pos');
+            document.getElementById('editPedidoId').value = p.id;
+            document.getElementById('inputCliente').value = p.cliente;
+            document.getElementById('inputMesa').value = p.mesa;
+            document.getElementById('tituloFormulario').textContent = `Editar Pedido #${p.id}`;
+            document.getElementById('btnGuardarPedido').textContent = 'Actualizar Pedido';
+            
+            tipoPedidoSelectorUi(p.tipo || 'Mesa');
+
+            pedidoActualItems = p.detalle.map(d => {
+                const ref = menuOficial.find(m => m.id === d.platoId) || { id: d.platoId, categoria: 'Principal', precio: d.precioUnitario };
+                return {
+                    id: d.platoId,
+                    nombre: d.plato,
+                    categoria: ref.categoria,
+                    precioBase: ref.precio || d.precioUnitario,
+                    precioUnitario: d.precioUnitario,
+                    cantidad: d.cantidad
+                };
+            });
+            renderPedidoActual();
+        }
+
+        async function eliminarPedido(id) {
+            if (!confirm("¿Estás seguro de eliminar este pedido?")) return;
+            try {
+                const res = await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
+                if (res.ok) cargarComandas();
+                else alert("Error al eliminar el pedido");
+            } catch (e) {
+                alert("Error de conexión");
+            }
+        }
+
+        function abrirModalCobro(p) {
+            pedidoCobrandoGlobal = p;
+            document.getElementById('modalIdPedido').textContent = p.id;
+            document.getElementById('modalClienteNombre').textContent = p.cliente;
+            document.getElementById('modalTotalPagar').textContent = p.total.toFixed(2);
+            document.getElementById('inputEfectivo').value = '';
+            document.getElementById('labelVuelto').textContent = '0.00';
+            document.getElementById('modalCobro').style.display = 'flex';
+        }
+
+        function cerrarModalCobro() {
+            document.getElementById('modalCobro').style.display = 'none';
+            pedidoCobrandoGlobal = null;
+        }
+
+        function calcularVuelto() {
+            const efectivo = parseFloat(document.getElementById('inputEfectivo').value) || 0;
+            const total = pedidoCobrandoGlobal ? pedidoCobrandoGlobal.total : 0;
+            const vuelto = efectivo - total;
+            document.getElementById('labelVuelto').textContent = vuelto >= 0 ? vuelto.toFixed(2) : '0.00';
+        }
+
+        async function confirmarCobro() {
+            const efectivo = parseFloat(document.getElementById('inputEfectivo').value) || 0;
+            if (efectivo < pedidoCobrandoGlobal.total) {
+                alert("El efectivo recibido es menor al total de la cuenta.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/pedidos/${pedidoCobrandoGlobal.id}/cobrar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ efectivoRecibido: efectivo })
+                });
+
+                if (res.ok) {
+                    alert("¡Cobro registrado con éxito!");
+                    cerrarModalCobro();
+                    cargarComandas();
+                } else {
+                    alert("Error al procesar el cobro.");
+                }
+            } catch (e) {
+                alert("Error de conexión.");
+            }
+        }
+
+        async function cargarReportes() {
+            try {
+                const res = await fetch('/api/pedidos');
+                const data = await res.json();
+                
+                document.getElementById('repTotalVentas').textContent = `$${(data.totalDineroRecaudado || 0).toFixed(2)}`;
+                
+                const pedidos = data.pedidos || [];
+                const cobrados = pedidos.filter(p => p.estado === 'Cobrado');
+                document.getElementById('repTotalCuentas').textContent = cobrados.length;
+                
+                const promedio = cobrados.length > 0 ? (data.totalDineroRecaudado / cobrados.length) : 0;
+                document.getElementById('repTicketPromedio').textContent = `$${promedio.toFixed(2)}`;
+
+                const tbody = document.getElementById('tablaResumenPlatos');
+                if (data.resumenProductos && Object.keys(data.resumenProductos).length > 0) {
+                    let html = '';
+                    for (let [nombre, info] of Object.entries(data.resumenProductos)) {
+                        if (info.cantidad > 0) {
+                            html += `
+                                <tr>
+                                    <td>${nombre}</td>
+                                    <td>${info.cantidad}</td>
+                                    <td>$${(info.cantidad * (info.precio || 0)).toFixed(2)}</td>
+                                </tr>
+                            `;
+                        }
+                    }
+                    tbody.innerHTML = html || '<tr><td colspan="3" style="text-align: center;">No hay platos cobrados aún.</td></tr>';
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay platos cobrados aún.</td></tr>';
+                }
+            } catch (e) {
+                console.error("Error al cargar reportes", e);
+            }
+        }
+
+        async function hacerCierreDia() {
+            if (!confirm("¿Estás seguro de realizar el cierre de jornada? Esto guardará el reporte y limpiará los pedidos del día.")) return;
+            try {
+                const res = await fetch('/api/cierre-dia', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.mensaje);
+                    cargarReportes();
+                } else {
+                    alert(data.error || "Error al realizar cierre");
+                }
+            } catch (e) {
+                alert("Error de conexión");
+            }
+        }
+
+        // Se ejecuta al cargar la página para mostrar los botones del menú
+        window.onload = function() {
+            renderMenuGrid();
+            renderPedidoActual();
+        };
+    </script>
+</body>
+</html>
