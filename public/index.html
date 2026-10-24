@@ -29,7 +29,6 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
         .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 400px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
 
-        /* Estilos responsivos para celulares */
         @media (max-width: 768px) {
             body { margin: 10px; font-size: 14px; }
             .container { padding: 12px; }
@@ -148,51 +147,37 @@
     </div>
 
     <script>
-        let menuGlobal = [];
+        // Menú exacto predefinido
+        const menuGlobal = [
+            { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Carnes" },
+            { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Carnes" },
+            { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Carnes" },
+            { id: 4, nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, categoria: "Carnes" },
+            { id: 5, nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, categoria: "Carnes" },
+            { id: 6, nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, categoria: "Carnes" },
+            { id: 7, nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, categoria: "Carnes" },
+            { id: 8, nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, categoria: "Carnes" },
+            { id: 9, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Porciones" },
+            { id: 10, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Porciones" },
+            { id: 11, nombre: "TERNERA ASADA", precio: 3.00, categoria: "Carnes" }
+        ];
+
         let historicoGlobal = [];
 
-        async function cargarMenu() {
-            try {
-                const res = await fetch('/api/menu');
-                menuGlobal = await res.json();
-                if(document.querySelectorAll('.item-row').length === 0) {
-                    agregarFila();
-                }
-            } catch (error) {
-                console.error("Error al cargar menú:", error);
-            }
-        }
-
         function generarOpcionesMenu() {
-            const categorias = ["Carnes", "Porciones", "Bebidas"];
-            let html = '<option value="">-- Seleccionar Producto --</option>';
-
-            categorias.forEach(cat => {
-           function generarOpcionesMenu() {
-            // Lista fija y limpia de productos con sus nombres exactos y precios fijos
-            const menuPersonalizado = [
-                { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Carnes" },
-                { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Carnes" },
-                { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Carnes" },
-                { id: 4, nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, categoria: "Carnes" },
-                { id: 5, nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, categoria: "Carnes" },
-                { id: 6, nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, categoria: "Carnes" },
-                { id: 7, nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, categoria: "Carnes" },
-                { id: 8, nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, categoria: "Carnes" },
-                { id: 9, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Porciones" },
-                { id: 10, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Porciones" },
-                { id: 11, nombre: "TERNERA ASADA", precio: 3.00, categoria: "Carnes" }
-            ];
-
-            // Actualizamos la variable global menuGlobal para que el resto de funciones lean los precios correctos
-            menuGlobal = menuPersonalizado;
-
             let html = '<option value="">-- Seleccionar Producto --</option>';
             menuGlobal.forEach(p => {
                 html += `<option value="${p.id}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
             });
             return html;
         }
+
+        function agregarFila(platoId = null, tipoConsumo = 'Mesa', precioCustom = null, cantidad = 1) {
+            const container = document.getElementById('itemsContainer');
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            
+            row.innerHTML = `
                 <select class="platoSelect" onchange="cambiarPlato(this)">
                     ${generarOpcionesMenu()}
                 </select>
@@ -214,49 +199,17 @@
 
         function cambiarPlato(selectElem, actualizarPrecioDefault = true) {
             const row = selectElem.parentElement;
-            const rawVal = selectElem.value;
-            let pId = rawVal;
-            if (typeof rawVal === 'string' && rawVal.includes('_')) {
-                pId = parseInt(rawVal.split('_')[0]);
-            } else {
-                pId = parseInt(rawVal);
-            }
-
+            const pId = parseInt(selectElem.value);
             const plato = menuGlobal.find(p => p.id === pId);
             const precioInput = row.querySelector('.precioInput');
-            const tipo = row.querySelector('.tipoSelect').value;
 
             if (plato && actualizarPrecioDefault) {
-                let precioBase = plato.precio;
-                if (tipo === 'Llevar' && (plato.categoria === 'Carnes' || plato.categoria === 'Porciones')) {
-                    precioBase += 0.50;
-                }
-                precioInput.value = precioBase.toFixed(2);
+                precioInput.value = plato.precio.toFixed(2);
             }
             calcularTotalPedido();
         }
 
         function cambiarTipoItem(tipoSelectElem) {
-            const row = tipoSelectElem.parentElement;
-            const rawVal = row.querySelector('.platoSelect').value;
-            let pId = rawVal;
-            if (typeof rawVal === 'string' && rawVal.includes('_')) {
-                pId = parseInt(rawVal.split('_')[0]);
-            } else {
-                pId = parseInt(rawVal);
-            }
-
-            const plato = menuGlobal.find(p => p.id === pId);
-            const precioInput = row.querySelector('.precioInput');
-            const tipo = tipoSelectElem.value;
-
-            if (plato) {
-                let precioBase = plato.precio;
-                if (tipo === 'Llevar' && (plato.categoria === 'Carnes' || plato.categoria === 'Porciones')) {
-                    precioBase += 0.50;
-                }
-                precioInput.value = precioBase.toFixed(2);
-            }
             calcularTotalPedido();
         }
 
@@ -280,16 +233,12 @@
             const rows = document.querySelectorAll('.item-row');
             const items = [];
             rows.forEach(row => {
-                const rawPlatoVal = row.querySelector('.platoSelect').value;
+                const platoId = parseInt(row.querySelector('.platoSelect').value);
                 const tipoConsumo = row.querySelector('.tipoSelect').value;
                 const precioUnitario = parseFloat(row.querySelector('.precioInput').value);
                 const cantidad = parseInt(row.querySelector('.cantidadInput').value);
 
-                if (rawPlatoVal && cantidad > 0) {
-                    let platoId = rawPlatoVal;
-                    if (typeof rawPlatoVal !== 'string' || !rawPlatoVal.includes('_')) {
-                        platoId = parseInt(rawPlatoVal);
-                    }
+                if (platoId && cantidad > 0) {
                     items.push({ platoId, tipoConsumo, precioUnitario, cantidad });
                 }
             });
@@ -302,18 +251,22 @@
             const url = idEdit ? `/api/pedidos/${idEdit}` : '/api/pedidos';
             const method = idEdit ? 'PUT' : 'POST';
 
-            const res = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cliente, mesa, items })
-            });
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cliente, mesa, items })
+                });
 
-            if (res.ok) {
-                alert(idEdit ? "¡Pedido actualizado con éxito!" : "¡Pedido registrado con éxito!");
-                limpiarFormulario();
-                cargarPedidos();
-            } else {
-                alert("Error al guardar el pedido");
+                if (res.ok) {
+                    alert(idEdit ? "¡Pedido actualizado con éxito!" : "¡Pedido registrado con éxito!");
+                    limpiarFormulario();
+                    cargarPedidos();
+                } else {
+                    alert("Error al guardar el pedido");
+                }
+            } catch (e) {
+                alert("Error de conexión al guardar el pedido");
             }
         }
 
@@ -330,54 +283,58 @@
         async function cargarPedidos() {
             try {
                 const res = await fetch('/api/pedidos');
+                if (!res.ok) throw new Error("Error en la respuesta del servidor");
                 const data = await res.json();
                 
-                document.getElementById('totalRecaudadoDia').textContent = `Total Recaudado Día: $${data.totalDineroRecaudado.toFixed(2)}`;
-                historicoGlobal = data.historicoCierres;
+                document.getElementById('totalRecaudadoDia').textContent = `Total Recaudado Día: $${(data.totalDineroRecaudado || 0).toFixed(2)}`;
+                historicoGlobal = data.historicoCierres || [];
 
-                // Renderizar Resumen
                 let resumenHTML = '';
-                for (let [nombre, info] of Object.entries(data.resumenProductos)) {
-                    if (info.cantidad > 0) {
-                        resumenHTML += `<div style="background: #fff; border: 1px solid #ccc; padding: 8px 12px; border-radius: 4px;">
-                            <strong>${nombre}:</strong> ${info.cantidad}
-                        </div>`;
+                if (data.resumenProductos) {
+                    for (let [nombre, info] of Object.entries(data.resumenProductos)) {
+                        if (info.cantidad > 0) {
+                            resumenHTML += `<div style="background: #fff; border: 1px solid #ccc; padding: 8px 12px; border-radius: 4px;">
+                                <strong>${nombre}:</strong> ${info.cantidad}
+                            </div>`;
+                        }
                     }
                 }
                 document.getElementById('resumenContenedor').innerHTML = resumenHTML || '<p>No hay platos cobrados aún hoy.</p>';
 
-                // Renderizar Tabla Pedidos
                 let tbody = '';
-                data.pedidos.forEach(p => {
-                    let detalleStr = p.detalle.map(d => `${d.cantidad}x ${d.plato} (${d.tipoConsumo})`).join('<br>');
-                    let estadoBadge = p.estado === 'Cobrado' ? '<span class="badge-cobrado">Cobrado</span>' : '<span class="badge-pendiente">Pendiente</span>';
-                    
-                    let acciones = '';
-                    if (p.estado === 'Pendiente') {
-                        acciones = `
-                            <button onclick='editarPedido(${JSON.stringify(p)})' style="background: #f0ad4e; padding: 5px 10px; font-size: 12px; margin-bottom: 3px;">Editar</button>
-                            <button onclick='abrirModalCobro(${JSON.stringify(p)})' style="background: #5cb85c; padding: 5px 10px; font-size: 12px;">Cobrar</button>
-                        `;
-                    } else {
-                        acciones = `<small>Efectivo: $${p.efectivoRecibido?.toFixed(2) || '0.00'}<br>Vuelto: $${p.vuelto?.toFixed(2) || '0.00'}</small>`;
-                    }
+                if (data.pedidos && data.pedidos.length > 0) {
+                    data.pedidos.forEach(p => {
+                        let detalleStr = p.detalle.map(d => `${d.cantidad}x ${d.plato} (${d.tipoConsumo})`).join('<br>');
+                        let estadoBadge = p.estado === 'Cobrado' ? '<span class="badge-cobrado">Cobrado</span>' : '<span class="badge-pendiente">Pendiente</span>';
+                        
+                        let acciones = '';
+                        if (p.estado === 'Pendiente') {
+                            acciones = `
+                                <button onclick='editarPedido(${JSON.stringify(p)})' style="background: #f0ad4e; padding: 5px 10px; font-size: 12px; margin-bottom: 3px;">Editar</button>
+                                <button onclick='abrirModalCobro(${JSON.stringify(p)})' style="background: #5cb85c; padding: 5px 10px; font-size: 12px;">Cobrar</button>
+                            `;
+                        } else {
+                            acciones = `<small>Efectivo: $${p.efectivoRecibido?.toFixed(2) || '0.00'}<br>Vuelto: $${p.vuelto?.toFixed(2) || '0.00'}</small>`;
+                        }
 
-                    tbody += `
-                        <tr>
-                            <td>${p.id}</td>
-                            <td>${p.cliente}</td>
-                            <td>${p.mesa}</td>
-                            <td>${detalleStr}</td>
-                            <td>$${p.total.toFixed(2)}</td>
-                            <td>${estadoBadge}</td>
-                            <td>${acciones}</td>
-                        </tr>
-                    `;
-                });
+                        tbody += `
+                            <tr>
+                                <td>${p.id}</td>
+                                <td>${p.cliente}</td>
+                                <td>${p.mesa}</td>
+                                <td>${detalleStr}</td>
+                                <td>$${p.total.toFixed(2)}</td>
+                                <td>${estadoBadge}</td>
+                                <td>${acciones}</td>
+                            </tr>
+                        `;
+                    });
+                }
                 document.getElementById('tablaPedidosBody').innerHTML = tbody || '<tr><td colspan="7" style="text-align: center;">No hay pedidos registrados hoy.</td></tr>';
 
             } catch (error) {
                 console.error("Error al cargar pedidos:", error);
+                document.getElementById('tablaPedidosBody').innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay pedidos registrados hoy.</td></tr>';
             }
         }
 
@@ -472,9 +429,9 @@
             document.getElementById('modalHistorico').style.display = 'none';
         }
 
-        window.onload = async function() {
-            await cargarMenu();
-            await cargarPedidos();
+        window.onload = function() {
+            agregarFila();
+            cargarPedidos();
         };
     </script>
 </body>
