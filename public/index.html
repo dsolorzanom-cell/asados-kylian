@@ -147,7 +147,7 @@
     </div>
 
     <script>
-        // Menú oficial completo proporcionado por el usuario
+        // Menú oficial completo
         const menuGlobal = [
             // Platos Principales
             { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Platos Principales" },
@@ -259,12 +259,19 @@
             const items = [];
             rows.forEach(row => {
                 const platoId = parseInt(row.querySelector('.platoSelect').value);
+                const platoObj = menuGlobal.find(p => p.id === platoId);
                 const tipoConsumo = row.querySelector('.tipoSelect').value;
                 const precioUnitario = parseFloat(row.querySelector('.precioInput').value);
                 const cantidad = parseInt(row.querySelector('.cantidadInput').value);
 
-                if (platoId && cantidad > 0) {
-                    items.push({ platoId, tipoConsumo, precioUnitario, cantidad });
+                if (platoObj && cantidad > 0) {
+                    items.push({ 
+                        platoId, 
+                        plato: platoObj.nombre, 
+                        tipoConsumo, 
+                        precioUnitario, 
+                        cantidad 
+                    });
                 }
             });
 
