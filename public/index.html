@@ -46,7 +46,6 @@
     <div class="container">
         <h1>Asados y Parrilla D' Kylian 🥩</h1>
         
-        <!-- Formulario Pedido -->
         <div class="form-group">
             <h2>Registrar Pedido</h2>
             <input type="hidden" id="pedidoIdEdit" value="">
@@ -76,7 +75,6 @@
 
         <hr style="margin: 30px 0;">
 
-        <!-- Resumen del Día -->
         <h2>Reporte del Día (Platos Cobrados)</h2>
         <div style="display: flex; gap: 15px; flex-wrap: wrap;" id="resumenContenedor"></div>
 
@@ -93,7 +91,6 @@
 
         <hr style="margin: 30px 0;">
 
-        <!-- Listado de Pedidos -->
         <h2>Lista de Pedidos del Día</h2>
         <div style="text-align: right; font-size: 18px; font-weight: bold; margin: 10px 0;" id="totalRecaudadoDia">
             Total Recaudado Día: $0.00
@@ -147,53 +144,69 @@
     </div>
 
     <script>
-        const menuGlobal = [
-            { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Platos Principales" },
-            { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Platos Principales" },
-            { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Platos Principales" },
-            { id: 4, nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, categoria: "Platos Principales" },
-            { id: 5, nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, categoria: "Platos Principales" },
-            { id: 6, nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, categoria: "Platos Principales" },
-            { id: 7, nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, categoria: "Platos Principales" },
-            { id: 8, nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, categoria: "Platos Principales" },
-            { id: 9, nombre: "TERNERA ASADA", precio: 3.00, categoria: "Platos Principales" },
-            { id: 10, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Platos Principales" },
-            { id: 11, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Platos Principales" },
+        // Lista exacta de productos guardada directamente con su categoría y precio
+        const menuOficial = [
+            // Platos Principales
+            { nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, tipo: "principal" },
+            { nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, tipo: "principal" },
+            { nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, tipo: "principal" },
+            { nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, tipo: "principal" },
+            { nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, tipo: "principal" },
+            { nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, tipo: "principal" },
+            { nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, tipo: "principal" },
+            { nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, tipo: "principal" },
+            { nombre: "TERNERA ASADA", precio: 3.00, tipo: "principal" },
+            { nombre: "PICADITA (ARROZ MORO)", precio: 5.00, tipo: "principal" },
+            { nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, tipo: "principal" },
             
-            { id: 12, nombre: "ARROZ MORO", precio: 2.00, categoria: "Porciones" },
-            { id: 13, nombre: "ARROZ BLANCO", precio: 2.00, categoria: "Porciones" },
-            { id: 14, nombre: "PATACONES", precio: 1.50, categoria: "Porciones" },
-            { id: 15, nombre: "TARRINA MENESTRA PEQUEÑA", precio: 1.25, categoria: "Porciones" },
-            { id: 16, nombre: "TARRINA MENESTRA GRANDE", precio: 2.50, categoria: "Porciones" },
+            // Porciones
+            { nombre: "ARROZ MORO", precio: 2.00, tipo: "porcion" },
+            { nombre: "ARROZ BLANCO", precio: 2.00, tipo: "porcion" },
+            { nombre: "PATACONES", precio: 1.50, tipo: "porcion" },
+            { nombre: "TARRINA MENESTRA PEQUEÑA", precio: 1.25, tipo: "porcion" },
+            { nombre: "TARRINA MENESTRA GRANDE", precio: 2.50, tipo: "porcion" },
 
-            { id: 17, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebidas" },
-            { id: 18, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebidas" },
-            { id: 19, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebidas" },
-            { id: 20, nombre: "FUZE TEA LT", precio: 1.25, categoria: "Bebidas" },
-            { id: 21, nombre: "AGUA", precio: 0.50, categoria: "Bebidas" },
-            { id: 22, nombre: "COLA PERSONAL", precio: 0.50, categoria: "Bebidas" }
+            // Bebidas
+            { nombre: "COCA COLA LT", precio: 1.75, tipo: "bebida" },
+            { nombre: "GASEOSA VARIOS LT", precio: 1.50, tipo: "bebida" },
+            { nombre: "FUZE TEA", precio: 0.75, tipo: "bebida" },
+            { nombre: "FUZE TEA LT", precio: 1.25, tipo: "bebida" },
+            { nombre: "AGUA", precio: 0.50, tipo: "bebida" },
+            { nombre: "COLA PERSONAL", precio: 0.50, tipo: "bebida" }
         ];
 
         let historicoGlobal = [];
 
         function generarOpcionesMenu() {
-            const categorias = ["Platos Principales", "Porciones", "Bebidas"];
             let html = '<option value="">-- Seleccionar Producto --</option>';
+            
+            // Agrupar visualmente
+            const principales = menuOficial.filter(p => p.tipo === "principal");
+            const porciones = menuOficial.filter(p => p.tipo === "porcion");
+            const bebidas = menuOficial.filter(p => p.tipo === "bebida");
 
-            categorias.forEach(cat => {
-                const productos = menuGlobal.filter(p => p.categoria === cat);
-                if (productos.length > 0) {
-                    html += `<optgroup label="--- ${cat.toUpperCase()} ---">`;
-                    productos.forEach(p => {
-                        html += `<option value="${p.id}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
-                    });
-                    html += `</optgroup>`;
-                }
+            html += '<optgroup label="--- PLATOS PRINCIPALES ---">';
+            principales.forEach(p => {
+                html += `<option value="${p.nombre}" data-precio="${p.precio}" data-tipo="${p.tipo}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
             });
+            html += '</optgroup>';
+
+            html += '<optgroup label="--- PORCIONES ---">';
+            porciones.forEach(p => {
+                html += `<option value="${p.nombre}" data-precio="${p.precio}" data-tipo="${p.tipo}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
+            });
+            html += '</optgroup>';
+
+            html += '<optgroup label="--- BEBIDAS ---">';
+            bebidas.forEach(p => {
+                html += `<option value="${p.nombre}" data-precio="${p.precio}" data-tipo="${p.tipo}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
+            });
+            html += '</optgroup>';
+
             return html;
         }
 
-        function agregarFila(platoId = null, tipoConsumo = 'Mesa', precioCustom = null, cantidad = 1) {
+        function agregarFila(nombreSeleccionado = '', tipoConsumo = 'Mesa', precioCustom = null, cantidad = 1) {
             const container = document.getElementById('itemsContainer');
             const row = document.createElement('div');
             row.className = 'item-row';
@@ -212,23 +225,25 @@
             `;
             container.appendChild(row);
 
-            if (platoId !== null) {
-                row.querySelector('.platoSelect').value = platoId;
-                cambiarPlato(row.querySelector('.platoSelect'), false);
+            if (nombreSeleccionado) {
+                const select = row.querySelector('.platoSelect');
+                select.value = nombreSeleccionado;
+                cambiarPlato(select, false);
             }
         }
 
         function cambiarPlato(selectElem, actualizarPrecioDefault = true) {
             const row = selectElem.parentElement;
-            const pId = parseInt(selectElem.value);
-            const plato = menuGlobal.find(p => p.id === pId);
+            const selectedOption = selectElem.options[selectElem.selectedIndex];
             const precioInput = row.querySelector('.precioInput');
-            const tipo = row.querySelector('.tipoSelect').value;
+            const tipoConsumo = row.querySelector('.tipoSelect').value;
 
-            if (plato && actualizarPrecioDefault) {
-                let precioBase = plato.precio;
-                // Si es para Llevar y pertenece a Platos Principales o Porciones, se suman $0.50
-                if (tipo === 'Llevar' && (plato.categoria === 'Platos Principales' || plato.categoria === 'Porciones')) {
+            if (selectedOption.value && actualizarPrecioDefault) {
+                let precioBase = parseFloat(selectedOption.getAttribute('data-precio')) || 0;
+                const tipoProd = selectedOption.getAttribute('data-tipo');
+
+                // Si es para llevar y es plato principal o porción, sumamos $0.50
+                if (tipoConsumo === 'Llevar' && (tipoProd === 'principal' || tipoProd === 'porcion')) {
                     precioBase += 0.50;
                 }
                 precioInput.value = precioBase.toFixed(2);
@@ -238,15 +253,16 @@
 
         function cambiarTipoItem(tipoSelectElem) {
             const row = tipoSelectElem.parentElement;
-            const pId = parseInt(row.querySelector('.platoSelect').value);
-            const plato = menuGlobal.find(p => p.id === pId);
+            const selectPlato = row.querySelector('.platoSelect');
+            const selectedOption = selectPlato.options[selectPlato.selectedIndex];
             const precioInput = row.querySelector('.precioInput');
-            const tipo = tipoSelectElem.value;
 
-            if (plato) {
-                let precioBase = plato.precio;
-                // Sumar $0.50 si es para Llevar en Platos Principales o Porciones
-                if (tipo === 'Llevar' && (plato.categoria === 'Platos Principales' || plato.categoria === 'Porciones')) {
+            if (selectedOption.value) {
+                let precioBase = parseFloat(selectedOption.getAttribute('data-precio')) || 0;
+                const tipoProd = selectedOption.getAttribute('data-tipo');
+                const tipoConsumo = tipoSelectElem.value;
+
+                if (tipoConsumo === 'Llevar' && (tipoProd === 'principal' || tipoProd === 'porcion')) {
                     precioBase += 0.50;
                 }
                 precioInput.value = precioBase.toFixed(2);
@@ -274,16 +290,15 @@
             const rows = document.querySelectorAll('.item-row');
             const items = [];
             rows.forEach(row => {
-                const platoId = parseInt(row.querySelector('.platoSelect').value);
-                const platoObj = menuGlobal.find(p => p.id === platoId);
+                const selectPlato = row.querySelector('.platoSelect');
+                const nombrePlato = selectPlato.value;
                 const tipoConsumo = row.querySelector('.tipoSelect').value;
-                const precioUnitario = parseFloat(row.querySelector('.precioInput').value);
-                const cantidad = parseInt(row.querySelector('.cantidadInput').value);
+                const precioUnitario = parseFloat(row.querySelector('.precioInput').value) || 0;
+                const cantidad = parseInt(row.querySelector('.cantidadInput').value) || 0;
 
-                if (platoObj && cantidad > 0) {
+                if (nombrePlato && cantidad > 0) {
                     items.push({ 
-                        platoId, 
-                        plato: platoObj.nombre, 
+                        plato: nombrePlato, // Mandamos el nombre exacto de forma limpia
                         tipoConsumo, 
                         precioUnitario, 
                         cantidad 
@@ -393,11 +408,11 @@
             document.getElementById('itemsContainer').innerHTML = '';
 
             pedido.detalle.forEach(d => {
-                agregarFila(d.platoId, d.tipoConsumo, d.precioUnitario, d.cantidad);
+                agregarFila(d.plato, d.tipoConsumo, d.precioUnitario, d.cantidad);
             });
 
             document.getElementById('btnGuardar').textContent = "Actualizar Pedido";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: `0`, behavior: 'smooth' });
         }
 
         let pedidoACobrar = null;
