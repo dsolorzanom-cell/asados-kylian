@@ -293,7 +293,6 @@
                     <div class="tipo-pedido-selector">
                         <div class="tipo-btn active" onclick="setTipoPedido('Mesa')">Mesa</div>
                         <div class="tipo-btn" onclick="setTipoPedido('Llevar')">Llevar</div>
-                        <div class="tipo-btn" onclick="setTipoPedido('Domicilio')">Domicilio</div>
                     </div>
 
                     <h3 style="margin-top: 15px;">Selecciona Productos:</h3>
@@ -428,7 +427,7 @@
             { id: 10, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Principal" },
             { id: 11, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Principal" },
             
-            // Nuevos platos con patacones
+            // Platos con patacones
             { id: 12, nombre: "CARNE ASADA CON PATACONES", precio: 4.00, categoria: "Principal" },
             { id: 13, nombre: "POLLO ASADO CON PATACONES", precio: 3.50, categoria: "Principal" },
             { id: 14, nombre: "CHULETA ASADA CON PATACONES", precio: 3.50, categoria: "Principal" },
@@ -446,16 +445,17 @@
             { id: 24, nombre: "PORCION DE CHULETA", precio: 2.50, categoria: "Porcion" },
             { id: 25, nombre: "PORCION DE PICADA", precio: 3.50, categoria: "Porcion" },
             { id: 26, nombre: "PORCION DE COSTILLA", precio: 4.50, categoria: "Porcion" },
+            { id: 27, nombre: "PORCION DE TERNERA", precio: 1.25, categoria: "Porcion" },
 
             // Bebidas
-            { id: 27, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebida" },
-            { id: 28, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebida" },
-            { id: 29, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebida" },
-            { id: 30, nombre: "FUZE TEA LT", precio: 1.25, categoria: "Bebida" },
-            { id: 31, nombre: "AGUA", precio: 0.50, categoria: "Bebida" },
-            { id: 32, nombre: "COLA PERSONAL", precio: 0.50, categoria: "Bebida" },
-            { id: 33, nombre: "CAFE", precio: 0.75, categoria: "Bebida" },
-            { id: 34, nombre: "AGUA AROMATICA", precio: 0.75, categoria: "Bebida" }
+            { id: 28, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebida" },
+            { id: 29, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebida" },
+            { id: 30, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebida" },
+            { id: 31, nombre: "FUZE TEA LT", precio: 1.25, categoria: "Bebida" },
+            { id: 32, nombre: "AGUA", precio: 0.50, categoria: "Bebida" },
+            { id: 33, nombre: "COLA PERSONAL", precio: 0.50, categoria: "Bebida" },
+            { id: 34, nombre: "CAFE", precio: 0.75, categoria: "Bebida" },
+            { id: 35, nombre: "AGUA AROMATICA", precio: 0.75, categoria: "Bebida" }
         ];
 
         let pedidoActualItems = [];
@@ -545,7 +545,7 @@
             const tipoConsumoItem = tipoPedidoSeleccionado; 
             let recargo = 0;
 
-            if (tipoConsumoItem === 'Llevar' || tipoConsumoItem === 'Domicilio') {
+            if (tipoConsumoItem === 'Llevar') {
                 if (plato.categoria === 'Principal') {
                     recargo = 0.50;
                 } else if (plato.categoria === 'Porcion') {
@@ -582,10 +582,6 @@
                 pedidoActualItems = pedidoActualItems.filter(i => !(i.id === idPlato && i.tipoConsumo === tipoConsumo));
             }
             renderPedidoActual();
-        }
-
-        function recalcularPreciosItems() {
-            // Ya no altera los ítems globales para permitir mezclar tipos de consumo libremente
         }
 
         function renderPedidoActual() {
