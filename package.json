@@ -1,12 +1,13 @@
 ﻿{
   "name": "asados-kylian",
   "version": "1.0.0",
-  "description": "Sistema de pedidos para Asados y Parrilla D' Kylian",
+  "description": "Sistema de gestión de pedidos para Asados y Parrilla D' Kylian",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.18.2",
+    "mongoose": "^8.0.0"
   }
 }
