@@ -3,27 +3,22 @@ const mongoose = require('mongoose');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Conexión a MongoDB
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:parrilla2026@cluster0.mongodb.net/asadoskylian?retryWrites=true&w=majority";
 
-if (MONGODB_URI) {
-    mongoose.connect(MONGODB_URI)
-        .then(() => console.log('✅ Conectado exitosamente a MongoDB Atlas'))
-        .catch(err => console.error('❌ Error al conectar a MongoDB:', err));
-} else {
-    console.warn('⚠️ No se encontró MONGODB_URI en las variables de entorno.');
-}
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('Conectado a MongoDB Atlas'))
+  .catch(err => console.error('Error conectando a MongoDB:', err));
 
-// Esquemas de MongoDB
+// Esquema de Pedidos
 const pedidoSchema = new mongoose.Schema({
     id: Number,
     cliente: String,
     mesa: String,
+    tipo: String,
     detalle: Array,
     total: Number,
     estado: { type: String, default: 'Pendiente' },
@@ -32,256 +27,151 @@ const pedidoSchema = new mongoose.Schema({
     fecha: { type: Date, default: Date.now }
 });
 
+const Pedido = mongoose.model('Pedido', pedidoSchema);
+
+// Esquema de Cierres Históricos
 const cierreSchema = new mongoose.Schema({
     fecha: String,
     totalVentas: Number,
     totalPedidos: Number,
-    resumenProductos: Object,
-    pedidos: Array
+    resumenProductos: Object
 });
-
-const Pedido = mongoose.model('Pedido', pedidoSchema);
 const Cierre = mongoose.model('Cierre', cierreSchema);
 
-// Menú Fijo
-const menu = [
-    { id: 1, categoria: "Carnes", nombre: "Carne Asada (Arroz Moro o Blanco)", precio: 3.50 },
-    { id: 2, categoria: "Carnes", nombre: "Pollo Asado (Arroz Moro o Blanco)", precio: 3.50 },
-    { id: 3, categoria: "Carnes", nombre: "Chuleta Asada (Arroz Moro o Blanco)", precio: 3.50 },
-    { id: 4, categoria: "Carnes", nombre: "Costilla Asada (Arroz Moro o Blanco)", precio: 4.00 },
-    { id: 5, categoria: "Carnes", nombre: "Ubre Asada (Arroz Moro o Blanco)", precio: 4.00 },
-    { id: 6, categoria: "Carnes", nombre: "Molleja Asada (Arroz Moro o Blanco)", precio: 3.50 },
-    { id: 7, categoria: "Carnes", nombre: "Chuzo de Carne o Pollo", precio: 2.00 },
-    { id: 8, categoria: "Porciones", nombre: "Porción de Arroz (Moro o Blanco)", precio: 1.00 },
-    { id: 9, categoria: "Porciones", nombre: "Porción de Menestra", precio: 1.00 },
-    { id: 10, categoria: "Porciones", nombre: "Porción de Papas Fritas", precio: 1.00 },
-    { id: 11, categoria: "Porciones", nombre: "Porción de Chifle", precio: 1.00 },
-    { id: 12, categoria: "Porciones", nombre: "Porción de Ensalada", precio: 1.00 },
-    { id: 13, categoria: "Porciones", nombre: "Consomé de Menudencia", precio: 1.00 },
-    { id: 14, categoria: "Bebidas", nombre: "Gaseosa Personal", precio: 0.60 },
-    { id: 15, categoria: "Bebidas", nombre: "Gaseosa 1 Litro", precio: 1.25 },
-    { id: 16, categoria: "Bebidas", nombre: "Gaseosa 3 Litros", precio: 2.50 },
-    { id: 17, categoria: "Bebidas", nombre: "Jarra de Agua aromática / Té", precio: 1.00 }
-];
-
-// RUTAS API
-
-// Obtener Menú
-app.get('/api/menu', (req, res) => {
-    res.json(menu);
-});
-
-// Obtener Pedidos del Día y Reporte
+// Rutas de la API
 app.get('/api/pedidos', async (req, res) => {
     try {
-        const pedidos = await Pedido.find().sort({ id: 1 });
-        
+        const pedidos = await Pedido.find({ estado: { $ne: 'Cerrado' } }).sort({ id: -1 });
+        const cobrados = await Pedido.find({ estado: 'Cobrado' });
+
         let totalDineroRecaudado = 0;
         let resumenProductos = {};
 
-        menu.forEach(p => {
-            resumenProductos[p.nombre] = { cantidad: 0, total: 0 };
-        });
-
-        pedidos.forEach(p => {
-            if (p.estado === 'Cobrado') {
-                totalDineroRecaudado += p.total;
-                p.detalle.forEach(item => {
-                    const platoBase = menu.find(m => m.id === item.platoIdReal);
-                    const nombreMenu = platoBase ? platoBase.nombre : item.plato;
-                    if (!resumenProductos[nombreMenu]) {
-                        resumenProductos[nombreMenu] = { cantidad: 0, total: 0 };
+        cobrados.forEach(p => {
+            totalDineroRecaudado += p.total || 0;
+            if (p.detalle) {
+                p.detalle.forEach(d => {
+                    if (!resumenProductos[d.plato]) {
+                        resumenProductos[d.plato] = { cantidad: 0, precio: d.precioUnitario };
                     }
-                    resumenProductos[nombreMenu].cantidad += item.cantidad;
-                    resumenProductos[nombreMenu].total += (item.precioUnitario * item.cantidad);
+                    resumenProductos[d.plato].cantidad += d.cantidad;
                 });
             }
         });
 
-        const cierres = await Cierre.find().sort({ _id: -1 });
+        const historicoCierres = await Cierre.find().sort({ _id: -1 }).limit(10);
 
         res.json({
             pedidos,
             totalDineroRecaudado,
             resumenProductos,
-            historicoCierres: cierres
+            historicoCierres
         });
-    } catch (error) {
+    } catch (e) {
         res.status(500).json({ error: "Error al obtener pedidos" });
     }
 });
 
-// Crear Pedido
 app.post('/api/pedidos', async (req, res) => {
     try {
-        const { cliente, mesa, items } = req.body;
-        if (!items || items.length === 0) {
-            return res.status(400).json({ error: "El pedido debe incluir al menos un plato." });
-        }
-
-        const ultimoPedido = await Pedido.findOne().sort({ id: -1 });
-        const nuevoId = ultimoPedido ? ultimoPedido.id + 1 : 1;
-
-        let totalCalculado = 0;
-        const detalleProcesado = items.map(item => {
-            let platoIdReal = item.platoId;
-            let sufijoArroz = "";
-            if (typeof item.platoId === 'string' && item.platoId.includes('_')) {
-                const partes = item.platoId.split('_');
-                platoIdReal = parseInt(partes[0]);
-                sufijoArroz = partes[1] === 'moro' ? ' (Arroz Moro)' : ' (Arroz Blanco)';
-            } else {
-                platoIdReal = parseInt(item.platoId);
-            }
-
-            const plato = menu.find(p => p.id === platoIdReal);
-            const nombrePlato = (plato ? plato.nombre : "Producto Especial") + sufijoArroz;
-            const subtotal = item.precioUnitario * item.cantidad;
-            totalCalculado += subtotal;
-
-            return {
-                platoId: item.platoId,
-                platoIdReal: platoIdReal,
-                plato: nombrePlato,
-                tipoConsumo: item.tipoConsumo,
-                precioUnitario: item.precioUnitario,
-                cantidad: item.cantidad,
-                subtotal: subtotal
-            };
-        });
+        const ultimo = await Pedido.findOne().sort({ id: -1 });
+        const nuevoId = ultimo && ultimo.id ? ultimo.id + 1 : 1;
 
         const nuevoPedido = new Pedido({
             id: nuevoId,
-            cliente: cliente || "Cliente General",
-            mesa: mesa || "Mesa 1",
-            detalle: detalleProcesado,
-            total: totalCalculado,
+            cliente: req.body.cliente,
+            mesa: req.body.mesa,
+            tipo: req.body.tipo || 'Mesa',
+            detalle: req.body.detalle,
+            total: req.body.total,
             estado: 'Pendiente'
         });
 
         await nuevoPedido.save();
-        res.status(201).json(nuevoPedido);
-    } catch (error) {
+        res.json({ mensaje: "Pedido guardado", pedido: nuevoPedido });
+    } catch (e) {
         res.status(500).json({ error: "Error al guardar el pedido" });
     }
 });
 
-// Actualizar Pedido
 app.put('/api/pedidos/:id', async (req, res) => {
     try {
-        const pedidoId = parseInt(req.params.id);
-        const { cliente, mesa, items } = req.body;
-
-        let totalCalculado = 0;
-        const detalleProcesado = items.map(item => {
-            let platoIdReal = item.platoId;
-            let sufijoArroz = "";
-            if (typeof item.platoId === 'string' && item.platoId.includes('_')) {
-                const partes = item.platoId.split('_');
-                platoIdReal = parseInt(partes[0]);
-                sufijoArroz = partes[1] === 'moro' ? ' (Arroz Moro)' : ' (Arroz Blanco)';
-            } else {
-                platoIdReal = parseInt(item.platoId);
-            }
-
-            const plato = menu.find(p => p.id === platoIdReal);
-            const nombrePlato = (plato ? plato.nombre : "Producto Especial") + sufijoArroz;
-            const subtotal = item.precioUnitario * item.cantidad;
-            totalCalculado += subtotal;
-
-            return {
-                platoId: item.platoId,
-                platoIdReal: platoIdReal,
-                plato: nombrePlato,
-                tipoConsumo: item.tipoConsumo,
-                precioUnitario: item.precioUnitario,
-                cantidad: item.cantidad,
-                subtotal: subtotal
-            };
-        });
-
-        const pedidoActualizado = await Pedido.findOneAndUpdate(
-            { id: pedidoId },
+        const pedido = await Pedido.findOneAndUpdate(
+            { id: req.params.id },
             {
-                cliente: cliente || "Cliente General",
-                mesa: mesa || "Mesa 1",
-                detalle: detalleProcesado,
-                total: totalCalculado
+                cliente: req.body.cliente,
+                mesa: req.body.mesa,
+                tipo: req.body.tipo,
+                detalle: req.body.detalle,
+                total: req.body.total
             },
             { new: true }
         );
-
-        res.json(pedidoActualizado);
-    } catch (error) {
+        res.json({ mensaje: "Pedido actualizado", pedido });
+    } catch (e) {
         res.status(500).json({ error: "Error al actualizar pedido" });
     }
 });
 
-// Cobrar Pedido
-app.post('/api/pedidos/:id/cobrar', async (req, res) => {
+app.delete('/api/pedidos/:id', async (req, res) => {
     try {
-        const pedidoId = parseInt(req.params.id);
-        const { efectivoRecibido } = req.body;
-
-        const pedido = await Pedido.findOne({ id: pedidoId });
-        if (!pedido) {
-            return res.status(404).json({ error: "Pedido no encontrado" });
-        }
-
-        const vuelto = efectivoRecibido - pedido.total;
-        pedido.estado = 'Cobrado';
-        pedido.efectivoRecibido = efectivoRecibido;
-        pedido.vuelto = vuelto >= 0 ? vuelto : 0;
-
-        await pedido.save();
-        res.json(pedido);
-    } catch (error) {
-        res.status(500).json({ error: "Error al procesar el cobro" });
+        await Pedido.findOneAndDelete({ id: req.params.id });
+        res.json({ mensaje: "Pedido eliminado" });
+    } catch (e) {
+        res.status(500).json({ error: "Error al eliminar pedido" });
     }
 });
 
-// Hacer Cierre de Día
+app.post('/api/pedidos/:id/cobrar', async (req, res) => {
+    try {
+        const pedido = await Pedido.findOne({ id: req.params.id });
+        if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
+
+        pedido.estado = 'Cobrado';
+        pedido.efectivoRecibido = req.body.efectivoRecibido;
+        pedido.vuelto = req.body.efectivoRecibido - pedido.total;
+        await pedido.save();
+
+        res.json({ mensaje: "Cobro exitoso", pedido });
+    } catch (e) {
+        res.status(500).json({ error: "Error al procesar cobro" });
+    }
+});
+
 app.post('/api/cierre-dia', async (req, res) => {
     try {
-        const pedidos = await Pedido.find();
-        if (pedidos.length === 0) {
-            return res.status(400).json({ error: "No hay pedidos registrados hoy para cerrar." });
+        const cobrados = await Pedido.find({ estado: 'Cobrado' });
+        if (cobrados.length === 0) {
+            return res.status(400).json({ error: "No hay pedidos cobrados para cerrar el día." });
         }
 
         let totalVentas = 0;
         let resumenProductos = {};
 
-        pedidos.forEach(p => {
-            if (p.estado === 'Cobrado') {
-                totalVentas += p.total;
-                p.detalle.forEach(item => {
-                    const platoBase = menu.find(m => m.id === item.platoIdReal);
-                    const nombreMenu = platoBase ? platoBase.nombre : item.plato;
-                    if (!resumenProductos[nombreMenu]) {
-                        resumenProductos[nombreMenu] = 0;
-                    }
-                    resumenProductos[nombreMenu] += item.cantidad;
-                });
-            }
+        cobrados.forEach(p => {
+            totalVentas += p.total;
+            p.detalle.forEach(d => {
+                if (!resumenProductos[d.plato]) resumenProductos[d.plato] = { cantidad: 0, precio: d.precioUnitario };
+                resumenProductos[d.plato].cantidad += d.cantidad;
+            });
         });
 
         const nuevoCierre = new Cierre({
-            fecha: new Date().toLocaleDateString('es-EC', { timeZone: 'America/Guayaquil' }),
+            fecha: new Date().toLocaleDateString(),
             totalVentas,
-            totalPedidos: pedidos.length,
-            resumenProductos,
-            pedidos
+            totalPedidos: cobrados.length,
+            resumenProductos
         });
-
         await nuevoCierre.save();
-        await Pedido.deleteMany({}); // Limpiar pedidos del día
 
-        res.json({ mensaje: "Cierre de día realizado con éxito.", cierre: nuevoCierre });
-    } catch (error) {
+        await Pedido.deleteMany({ estado: 'Cobrado' });
+        await Pedido.updateMany({ estado: 'Pendiente' }, { estado: 'Cerrado' });
+
+        res.json({ mensaje: "¡Cierre de jornada realizado con éxito!" });
+    } catch (e) {
         res.status(500).json({ error: "Error al realizar el cierre" });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor iniciado en puerto ${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
