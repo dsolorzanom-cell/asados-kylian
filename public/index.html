@@ -292,7 +292,7 @@
                     <label>Tipo de Pedido:</label>
                     <div class="tipo-pedido-selector">
                         <div class="tipo-btn active" onclick="setTipoPedido('Mesa')">Mesa</div>
-                        <div class="tipo-btn" onclick="setTipoPedido('Llevar')">Llevar (+$0.50)</div>
+                        <div class="tipo-btn" onclick="setTipoPedido('Llevar')">Llevar</div>
                         <div class="tipo-btn" onclick="setTipoPedido('Domicilio')">Domicilio</div>
                     </div>
 
@@ -373,7 +373,7 @@
         <!-- VISTA MODIFICAR PRECIOS -->
         <div id="vista-precios" class="view-section">
             <h2>Modificar Precios del Menú</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">Modifica el precio del plato o producto que desees y haz clic en "Guardar Cambios".</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Modifica el precio del plato o producto que desees y haz clic en "Guardar".</p>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
@@ -527,7 +527,6 @@
 
         function setTipoPedido(tipo) {
             tipoPedidoSelectorUi(tipo);
-            recalcularPreciosItems();
         }
 
         function tipoPedidoSelectorUi(tipo) {
@@ -543,12 +542,22 @@
             const plato = menuOficial.find(p => p.id === idPlato);
             if (!plato) return;
 
-            let precioFinal = plato.precio;
-            if ((tipoPedidoSeleccionado === 'Llevar' || tipoPedidoSeleccionado === 'Domicilio') && (plato.categoria === 'Principal' || plato.categoria === 'Porcion')) {
-                precioFinal += 0.50;
+            const tipoConsumoItem = tipoPedidoSeleccionado; 
+            let recargo = 0;
+
+            if (tipoConsumoItem === 'Llevar' || tipoConsumoItem === 'Domicilio') {
+                if (plato.categoria === 'Principal') {
+                    recargo = 0.50;
+                } else if (plato.categoria === 'Porcion') {
+                    if (!plato.nombre.includes('MENESTRA')) {
+                        recargo = 0.25;
+                    }
+                }
             }
 
-            const existente = pedidoActualItems.find(i => i.id === idPlato);
+            let precioFinal = plato.precio + recargo;
+
+            const existente = pedidoActualItems.find(i => i.id === idPlato && i.tipoConsumo === tipoConsumoItem);
             if (existente) {
                 existente.cantidad++;
             } else {
@@ -556,6 +565,7 @@
                     id: plato.id,
                     nombre: plato.nombre,
                     categoria: plato.categoria,
+                    tipoConsumo: tipoConsumoItem,
                     precioBase: plato.precio,
                     precioUnitario: precioFinal,
                     cantidad: 1
@@ -564,25 +574,18 @@
             renderPedidoActual();
         }
 
-        function cambiarCantidad(idPlato, delta) {
-            const item = pedidoActualItems.find(i => i.id === idPlato);
+        function cambiarCantidad(idPlato, tipoConsumo, delta) {
+            const item = pedidoActualItems.find(i => i.id === idPlato && i.tipoConsumo === tipoConsumo);
             if (!item) return;
             item.cantidad += delta;
             if (item.cantidad <= 0) {
-                pedidoActualItems = pedidoActualItems.filter(i => i.id !== idPlato);
+                pedidoActualItems = pedidoActualItems.filter(i => !(i.id === idPlato && i.tipoConsumo === tipoConsumo));
             }
             renderPedidoActual();
         }
 
         function recalcularPreciosItems() {
-            pedidoActualItems.forEach(item => {
-                let precioFinal = item.precioBase;
-                if ((tipoPedidoSeleccionado === 'Llevar' || tipoPedidoSeleccionado === 'Domicilio') && (item.categoria === 'Principal' || item.categoria === 'Porcion')) {
-                    precioFinal += 0.50;
-                }
-                item.precioUnitario = precioFinal;
-            });
-            renderPedidoActual();
+            // Ya no altera los ítems globales para permitir mezclar tipos de consumo libremente
         }
 
         function renderPedidoActual() {
@@ -600,13 +603,13 @@
                 return `
                     <div class="order-item-row">
                         <div>
-                            <strong>${item.nombre}</strong><br>
+                            <strong>${item.nombre}</strong> <small style="color: var(--warning);">(${item.tipoConsumo})</small><br>
                             <small style="color: var(--accent);">$${item.precioUnitario.toFixed(2)} c/u</small>
                         </div>
                         <div class="item-controls">
-                            <button type="button" onclick="cambiarCantidad(${item.id}, -1)">-</button>
+                            <button type="button" onclick="cambiarCantidad(${item.id}, '${item.tipoConsumo}', -1)">-</button>
                             <span>${item.cantidad}</span>
-                            <button type="button" onclick="cambiarCantidad(${item.id}, 1)">+</button>
+                            <button type="button" onclick="cambiarCantidad(${item.id}, '${item.tipoConsumo}', 1)">+</button>
                             <span style="min-width: 55px; text-align: right; font-weight: bold;">$${sub.toFixed(2)}</span>
                         </div>
                     </div>
@@ -635,7 +638,7 @@
                 detalle: pedidoActualItems.map(i => ({
                     platoId: i.id,
                     plato: i.nombre,
-                    tipoConsumo: tipoPedidoSeleccionado,
+                    tipoConsumo: i.tipoConsumo,
                     precioUnitario: i.precioUnitario,
                     cantidad: i.cantidad
                 })),
@@ -696,7 +699,7 @@
                         </div>
                         <div style="font-size: 0.85rem; color: var(--accent); margin-bottom: 5px;">Cliente: ${p.cliente}</div>
                         <div class="comanda-details">
-                            ${p.detalle.map(d => `<div>${d.cantidad}x ${d.plato} <small>(${d.tipoConsumo})</small></div>`).join('')}
+                            ${p.detalle.map(d => `<div>${d.cantidad}x ${d.plato} <small style="color: var(--warning);">(${d.tipoConsumo})</small></div>`).join('')}
                         </div>
                         <div class="comanda-footer">
                             <span>Total:</span>
@@ -732,6 +735,7 @@
                     id: d.platoId,
                     nombre: d.plato,
                     categoria: ref.categoria,
+                    tipoConsumo: d.tipoConsumo || 'Mesa',
                     precioBase: ref.precio || d.precioUnitario,
                     precioUnitario: d.precioUnitario,
                     cantidad: d.cantidad
@@ -808,7 +812,6 @@
                 document.getElementById('repTotalVentas').textContent = `$${totalVentas.toFixed(2)}`;
                 
                 const cobrados = (data.pedidos || []).filter(p => p.estado === 'Cobrado');
-                // Se pueden calcular los reportes correctamente desde la API
                 document.getElementById('repTotalCuentas').textContent = cobrados.length;
                 const promedio = cobrados.length > 0 ? totalVentas / cobrados.length : 0;
                 document.getElementById('repTicketPromedio').textContent = `$${promedio.toFixed(2)}`;
