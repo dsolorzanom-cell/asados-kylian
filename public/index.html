@@ -147,9 +147,7 @@
     </div>
 
     <script>
-        // Menú oficial completo
         const menuGlobal = [
-            // Platos Principales
             { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Platos Principales" },
             { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Platos Principales" },
             { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Platos Principales" },
@@ -162,14 +160,12 @@
             { id: 10, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Platos Principales" },
             { id: 11, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Platos Principales" },
             
-            // Porciones
             { id: 12, nombre: "ARROZ MORO", precio: 2.00, categoria: "Porciones" },
             { id: 13, nombre: "ARROZ BLANCO", precio: 2.00, categoria: "Porciones" },
             { id: 14, nombre: "PATACONES", precio: 1.50, categoria: "Porciones" },
             { id: 15, nombre: "TARRINA MENESTRA PEQUEÑA", precio: 1.25, categoria: "Porciones" },
             { id: 16, nombre: "TARRINA MENESTRA GRANDE", precio: 2.50, categoria: "Porciones" },
 
-            // Bebidas
             { id: 17, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebidas" },
             { id: 18, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebidas" },
             { id: 19, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebidas" },
@@ -227,14 +223,34 @@
             const pId = parseInt(selectElem.value);
             const plato = menuGlobal.find(p => p.id === pId);
             const precioInput = row.querySelector('.precioInput');
+            const tipo = row.querySelector('.tipoSelect').value;
 
             if (plato && actualizarPrecioDefault) {
-                precioInput.value = plato.precio.toFixed(2);
+                let precioBase = plato.precio;
+                // Si es para Llevar y pertenece a Platos Principales o Porciones, se suman $0.50
+                if (tipo === 'Llevar' && (plato.categoria === 'Platos Principales' || plato.categoria === 'Porciones')) {
+                    precioBase += 0.50;
+                }
+                precioInput.value = precioBase.toFixed(2);
             }
             calcularTotalPedido();
         }
 
         function cambiarTipoItem(tipoSelectElem) {
+            const row = tipoSelectElem.parentElement;
+            const pId = parseInt(row.querySelector('.platoSelect').value);
+            const plato = menuGlobal.find(p => p.id === pId);
+            const precioInput = row.querySelector('.precioInput');
+            const tipo = tipoSelectElem.value;
+
+            if (plato) {
+                let precioBase = plato.precio;
+                // Sumar $0.50 si es para Llevar en Platos Principales o Porciones
+                if (tipo === 'Llevar' && (plato.categoria === 'Platos Principales' || plato.categoria === 'Porciones')) {
+                    precioBase += 0.50;
+                }
+                precioInput.value = precioBase.toFixed(2);
+            }
             calcularTotalPedido();
         }
 
