@@ -147,27 +147,52 @@
     </div>
 
     <script>
-        // Menú exacto predefinido
+        // Menú oficial completo proporcionado por el usuario
         const menuGlobal = [
-            { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Carnes" },
-            { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Carnes" },
-            { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Carnes" },
-            { id: 4, nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, categoria: "Carnes" },
-            { id: 5, nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, categoria: "Carnes" },
-            { id: 6, nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, categoria: "Carnes" },
-            { id: 7, nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, categoria: "Carnes" },
-            { id: 8, nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, categoria: "Carnes" },
-            { id: 9, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Porciones" },
-            { id: 10, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Porciones" },
-            { id: 11, nombre: "TERNERA ASADA", precio: 3.00, categoria: "Carnes" }
+            // Platos Principales
+            { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Platos Principales" },
+            { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Platos Principales" },
+            { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Platos Principales" },
+            { id: 4, nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, categoria: "Platos Principales" },
+            { id: 5, nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, categoria: "Platos Principales" },
+            { id: 6, nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, categoria: "Platos Principales" },
+            { id: 7, nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, categoria: "Platos Principales" },
+            { id: 8, nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, categoria: "Platos Principales" },
+            { id: 9, nombre: "TERNERA ASADA", precio: 3.00, categoria: "Platos Principales" },
+            { id: 10, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Platos Principales" },
+            { id: 11, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Platos Principales" },
+            
+            // Porciones
+            { id: 12, nombre: "ARROZ MORO", precio: 2.00, categoria: "Porciones" },
+            { id: 13, nombre: "ARROZ BLANCO", precio: 2.00, categoria: "Porciones" },
+            { id: 14, nombre: "PATACONES", precio: 1.50, categoria: "Porciones" },
+            { id: 15, nombre: "TARRINA MENESTRA PEQUEÑA", precio: 1.25, categoria: "Porciones" },
+            { id: 16, nombre: "TARRINA MENESTRA GRANDE", precio: 2.50, categoria: "Porciones" },
+
+            // Bebidas
+            { id: 17, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebidas" },
+            { id: 18, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebidas" },
+            { id: 19, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebidas" },
+            { id: 20, nombre: "FUZE TEA LT", precio: 1.25, categoria: "Bebidas" },
+            { id: 21, nombre: "AGUA", precio: 0.50, categoria: "Bebidas" },
+            { id: 22, nombre: "COLA PERSONAL", precio: 0.50, categoria: "Bebidas" }
         ];
 
         let historicoGlobal = [];
 
         function generarOpcionesMenu() {
+            const categorias = ["Platos Principales", "Porciones", "Bebidas"];
             let html = '<option value="">-- Seleccionar Producto --</option>';
-            menuGlobal.forEach(p => {
-                html += `<option value="${p.id}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
+
+            categorias.forEach(cat => {
+                const productos = menuGlobal.filter(p => p.categoria === cat);
+                if (productos.length > 0) {
+                    html += `<optgroup label="--- ${cat.toUpperCase()} ---">`;
+                    productos.forEach(p => {
+                        html += `<option value="${p.id}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
+                    });
+                    html += `</optgroup>`;
+                }
             });
             return html;
         }
