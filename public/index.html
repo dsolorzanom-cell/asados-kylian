@@ -37,7 +37,7 @@
 
         header h1 { font-size: 1.4rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
 
-        .nav-tabs { display: flex; gap: 10px; }
+        .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
 
         .nav-btn {
             background: rgba(255,255,255,0.1);
@@ -265,6 +265,7 @@
             <button class="nav-btn active" onclick="cambiarVista('pos')">Registrar Pedido</button>
             <button class="nav-btn" onclick="cambiarVista('comandas')">Comandas Activas</button>
             <button class="nav-btn" onclick="cambiarVista('reportes')">Reportes del Día</button>
+            <button class="nav-btn" onclick="cambiarVista('precios')" style="background: var(--accent); color: #000;">⚙️ Modificar Precios</button>
         </div>
     </header>
 
@@ -369,6 +370,27 @@
             </div>
         </div>
 
+        <!-- VISTA MODIFICAR PRECIOS -->
+        <div id="vista-precios" class="view-section">
+            <h2>Modificar Precios del Menú</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Modifica el precio del plato o producto que desees y haz clic en "Guardar Cambios".</p>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ítem / Plato</th>
+                            <th>Categoría</th>
+                            <th>Precio Actual ($)</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaGestionPrecios">
+                        <!-- Generado dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <!-- MODAL DE COBRO -->
@@ -393,7 +415,7 @@
     </div>
 
     <script>
-        const menuOficial = [
+        let menuOficial = [
             { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Principal" },
             { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Principal" },
             { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Principal" },
@@ -406,23 +428,43 @@
             { id: 10, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Principal" },
             { id: 11, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Principal" },
             
-            { id: 12, nombre: "ARROZ MORO", precio: 2.00, categoria: "Porcion" },
-            { id: 13, nombre: "ARROZ BLANCO", precio: 2.00, categoria: "Porcion" },
-            { id: 14, nombre: "PATACONES", precio: 1.50, categoria: "Porcion" },
-            { id: 15, nombre: "TARRINA MENESTRA PEQUEÑA", precio: 1.25, categoria: "Porcion" },
-            { id: 16, nombre: "TARRINA MENESTRA GRANDE", precio: 2.50, categoria: "Porcion" },
+            // Nuevos platos con patacones
+            { id: 12, nombre: "CARNE ASADA CON PATACONES", precio: 4.00, categoria: "Principal" },
+            { id: 13, nombre: "POLLO ASADO CON PATACONES", precio: 3.50, categoria: "Principal" },
+            { id: 14, nombre: "CHULETA ASADA CON PATACONES", precio: 3.50, categoria: "Principal" },
+            { id: 15, nombre: "COSTILLA ASADA CON PATACONES", precio: 6.00, categoria: "Principal" },
+            { id: 16, nombre: "PICADITA CON PATACONES", precio: 5.00, categoria: "Principal" },
 
-            { id: 17, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebida" },
-            { id: 18, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebida" },
-            { id: 19, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebida" },
-            { id: 20, nombre: "FUZE TEA LT", precio: 1.25, categoria: "Bebida" },
-            { id: 21, nombre: "AGUA", precio: 0.50, categoria: "Bebida" },
-            { id: 22, nombre: "COLA PERSONAL", precio: 0.50, categoria: "Bebida" }
+            // Porciones y adiciones
+            { id: 17, nombre: "ARROZ MORO", precio: 2.00, categoria: "Porcion" },
+            { id: 18, nombre: "ARROZ BLANCO", precio: 2.00, categoria: "Porcion" },
+            { id: 19, nombre: "PATACONES", precio: 1.50, categoria: "Porcion" },
+            { id: 20, nombre: "TARRINA MENESTRA PEQUEÑA", precio: 1.00, categoria: "Porcion" },
+            { id: 21, nombre: "TARRINA MENESTRA GRANDE", precio: 2.00, categoria: "Porcion" },
+            { id: 22, nombre: "PORCION DE POLLO", precio: 2.50, categoria: "Porcion" },
+            { id: 23, nombre: "PORCION DE CARNE", precio: 3.00, categoria: "Porcion" },
+            { id: 24, nombre: "PORCION DE CHULETA", precio: 2.50, categoria: "Porcion" },
+            { id: 25, nombre: "PORCION DE PICADA", precio: 3.50, categoria: "Porcion" },
+            { id: 26, nombre: "PORCION DE COSTILLA", precio: 4.50, categoria: "Porcion" },
+
+            // Bebidas
+            { id: 27, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebida" },
+            { id: 28, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebida" },
+            { id: 29, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebida" },
+            { id: 30, nombre: "FUZE TEA LT", precio: 1.25, categoria: "Bebida" },
+            { id: 31, nombre: "AGUA", precio: 0.50, categoria: "Bebida" },
+            { id: 32, nombre: "COLA PERSONAL", precio: 0.50, categoria: "Bebida" },
+            { id: 33, nombre: "CAFE", precio: 0.75, categoria: "Bebida" },
+            { id: 34, nombre: "AGUA AROMATICA", precio: 0.75, categoria: "Bebida" }
         ];
 
         let pedidoActualItems = [];
         let tipoPedidoSeleccionado = "Mesa";
         let pedidoCobrandoGlobal = null;
+
+        window.onload = function() {
+            renderMenuGrid();
+        };
 
         function cambiarVista(vista) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -439,6 +481,10 @@
                 document.getElementById('vista-reportes').classList.add('active');
                 event.target.classList.add('active');
                 cargarReportes();
+            } else if (vista === 'precios') {
+                document.getElementById('vista-precios').classList.add('active');
+                event.target.classList.add('active');
+                renderTablaPrecios();
             }
         }
 
@@ -451,6 +497,32 @@
                     <span class="menu-item-price">$${item.precio.toFixed(2)}</span>
                 </button>
             `).join('');
+        }
+
+        function renderTablaPrecios() {
+            const tbody = document.getElementById('tablaGestionPrecios');
+            tbody.innerHTML = menuOficial.map(item => `
+                <tr>
+                    <td><strong>${item.nombre}</strong></td>
+                    <td>${item.categoria}</td>
+                    <td><input type="number" step="0.05" id="precio_input_${item.id}" value="${item.precio.toFixed(2)}" style="width: 100px;"></td>
+                    <td><button class="nav-btn" style="background: var(--success); border: none; padding: 6px 12px;" onclick="actualizarPrecioPlato(${item.id})">Guardar</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarPrecioPlato(id) {
+            const nuevoVal = parseFloat(document.getElementById(`precio_input_${id}`).value);
+            if (isNaN(nuevoVal) || nuevoVal < 0) {
+                alert("Por favor ingresa un precio válido.");
+                return;
+            }
+            const plato = menuOficial.find(p => p.id === id);
+            if (plato) {
+                plato.precio = nuevoVal;
+                alert(`¡Precio de "${plato.nombre}" actualizado a $${nuevoVal.toFixed(2)}!`);
+                renderMenuGrid();
+            }
         }
 
         function setTipoPedido(tipo) {
@@ -732,40 +804,42 @@
                 const res = await fetch('/api/pedidos');
                 const data = await res.json();
                 
-                document.getElementById('repTotalVentas').textContent = `$${(data.totalDineroRecaudado || 0).toFixed(2)}`;
+                const totalVentas = data.totalDineroRecaudado || 0;
+                document.getElementById('repTotalVentas').textContent = `$${totalVentas.toFixed(2)}`;
                 
-                const pedidos = data.pedidos || [];
-                const cobrados = pedidos.filter(p => p.estado === 'Cobrado');
+                const cobrados = (data.pedidos || []).filter(p => p.estado === 'Cobrado');
+                // Se pueden calcular los reportes correctamente desde la API
                 document.getElementById('repTotalCuentas').textContent = cobrados.length;
-                
-                const promedio = cobrados.length > 0 ? (data.totalDineroRecaudado / cobrados.length) : 0;
+                const promedio = cobrados.length > 0 ? totalVentas / cobrados.length : 0;
                 document.getElementById('repTicketPromedio').textContent = `$${promedio.toFixed(2)}`;
 
                 const tbody = document.getElementById('tablaResumenPlatos');
-                if (data.resumenProductos && Object.keys(data.resumenProductos).length > 0) {
-                    let html = '';
-                    for (let [nombre, info] of Object.entries(data.resumenProductos)) {
-                        if (info.cantidad > 0) {
-                            html += `
-                                <tr>
-                                    <td>${nombre}</td>
-                                    <td>${info.cantidad}</td>
-                                    <td>$${(info.cantidad * (info.precio || 0)).toFixed(2)}</td>
-                                </tr>
-                            `;
-                        }
-                    }
-                    tbody.innerHTML = html || '<tr><td colspan="3" style="text-align: center;">No hay platos cobrados aún.</td></tr>';
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay platos cobrados aún.</td></tr>';
+                const resumen = data.resumenProductos || {};
+                const keys = Object.keys(resumen);
+
+                if (keys.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay ventas cobradas hoy.</td></tr>';
+                    return;
                 }
+
+                tbody.innerHTML = keys.map(plato => {
+                    const info = resumen[plato];
+                    const subtotalGen = info.cantidad * info.precio;
+                    return `
+                        <tr>
+                            <td>${plato}</td>
+                            <td>${info.cantidad}</td>
+                            <td>$${subtotalGen.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (e) {
                 console.error("Error al cargar reportes", e);
             }
         }
 
         async function hacerCierreDia() {
-            if (!confirm("¿Estás seguro de realizar el cierre de jornada? Esto guardará el reporte y limpiará los pedidos del día.")) return;
+            if (!confirm("¿Estás seguro de realizar el cierre de jornada? Se vaciarán las cuentas cobradas.")) return;
             try {
                 const res = await fetch('/api/cierre-dia', { method: 'POST' });
                 const data = await res.json();
@@ -773,17 +847,12 @@
                     alert(data.mensaje);
                     cargarReportes();
                 } else {
-                    alert(data.error || "Error al realizar cierre");
+                    alert(data.error || "Error al realizar el cierre.");
                 }
             } catch (e) {
-                alert("Error de conexión");
+                alert("Error de conexión.");
             }
         }
-
-        window.onload = function() {
-            renderMenuGrid();
-            renderPedidoActual();
-        };
     </script>
 </body>
 </html>
