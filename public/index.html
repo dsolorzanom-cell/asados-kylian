@@ -5,497 +5,426 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asados y Parrilla D' Kylian</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        h1, h2, h3 { color: #8b0000; margin-bottom: 10px; }
-        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select, button { padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        input[type="text"], input[type="number"], select { width: 100%; }
-        button { background-color: #8b0000; color: white; border: none; font-size: 15px; cursor: pointer; }
-        button:hover { background-color: #a00000; }
-        .item-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #fff8f8; padding: 10px; border-radius: 5px; border: 1px solid #eee; }
-        .item-row select.platoSelect { flex: 3; }
-        .item-row select.tipoSelect { flex: 1.5; }
-        .item-row .price-field { flex: 1; }
-        .item-row .qty-field { flex: 0.8; }
-        .item-row button { background: #cc0000; padding: 10px; width: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #8b0000; color: white; }
-        .badge-pendiente { background-color: #ffcc00; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
-        .badge-cobrado { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
-        .cierre-box { display: flex; justify-content: space-between; align-items: center; background: #eef; padding: 15px; border-radius: 5px; margin-top: 20px; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 400px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-
-        @media (max-width: 768px) {
-            body { margin: 10px; font-size: 14px; }
-            .container { padding: 12px; }
-            .item-row { flex-direction: column; align-items: stretch; gap: 5px; }
-            .item-row select.platoSelect, .item-row select.tipoSelect, .item-row .price-field, .item-row .qty-field { width: 100%; flex: none; }
-            .cierre-box { flex-direction: column; align-items: stretch; gap: 10px; }
-            button { width: 100%; padding: 12px; }
-            table { font-size: 12px; display: block; overflow-x: auto; white-space: nowrap; }
-            .modal-content { width: 90%; padding: 15px; }
+        :root {
+            --primary: #8b0000;
+            --primary-dark: #600000;
+            --accent: #d4af37;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #f4f4f9;
+            --text-muted: #aaa;
+            --border: #333;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --warning: #f57f17;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); padding-bottom: 50px; }
+
+        header {
+            background-color: var(--primary-dark);
+            border-bottom: 3px solid var(--accent);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        header h1 { font-size: 1.4rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active, .nav-btn:hover {
+            background-color: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* Estilos POS / Pedidos */
+        .pos-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .pos-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .card h2, .card h3 { color: var(--accent); margin-bottom: 15px; font-size: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .form-group { flex: 1; }
+        label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text-muted); }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus { border-color: var(--accent); outline: none; }
+
+        .tipo-pedido-selector {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tipo-btn {
+            flex: 1;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .tipo-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .menu-item-btn {
+            background: #252525;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 90px;
+            transition: all 0.15s;
+        }
+        .menu-item-btn:hover {
+            border-color: var(--accent);
+            background: #2f2f2f;
+            transform: translateY(-2px);
+        }
+        .menu-item-name { font-size: 0.8rem; font-weight: bold; line-height: 1.1; }
+        .menu-item-price { font-size: 0.9rem; color: var(--accent); font-weight: bold; margin-top: 5px; }
+
+        .order-items-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #161616;
+        }
+
+        .order-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .order-item-row:last-child { border-bottom: none; }
+        .item-controls { display: flex; align-items: center; gap: 8px; }
+        .item-controls button {
+            background: #333; color: white; border: none; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; font-weight: bold;
+        }
+        .item-controls button:hover { background: var(--primary); }
+
+        .order-total-box {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #252525;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-main:hover { background: var(--primary-dark); }
+
+        /* Lista de Comandas Activas */
+        .comandas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .comanda-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+            border-top: 4px solid var(--warning);
+        }
+        .comanda-card.cobrado { border-top-color: var(--success); }
+
+        .comanda-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+        .comanda-title { font-weight: bold; font-size: 1.1rem; color: var(--accent); }
+        .comanda-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #333; }
+
+        .comanda-details { font-size: 0.9rem; margin-bottom: 12px; color: #ccc; max-height: 120px; overflow-y: auto; }
+        .comanda-details div { padding: 3px 0; border-bottom: 1px dashed #2a2a2a; }
+
+        .comanda-footer { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .comanda-actions { display: flex; gap: 5px; margin-top: 10px; }
+        .comanda-actions button { flex: 1; padding: 6px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+        .btn-cobrar { background: var(--success); color: white; }
+        .btn-editar { background: #0277bd; color: white; }
+        .btn-eliminar { background: var(--danger); color: white; }
+
+        /* Modal Cobro */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 10px; width: 350px; max-width: 90%;
+        }
+        .modal-content h3 { color: var(--accent); margin-bottom: 15px; }
+
+        /* Reportes */
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-box h4 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+        .stat-box p { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--bg-card); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #252525; color: var(--accent); }
+
+        .acciones-tabla button { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8rem; margin-right: 3px; }
     </style>
 </head>
 <body>
 
+    <header>
+        <h1>🥩 Asados y Parrilla D' Kylian</h1>
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="cambiarVista('pos')">Registrar Pedido</button>
+            <button class="nav-btn" onclick="cambiarVista('comandas')">Comandas Activas</button>
+            <button class="nav-btn" onclick="cambiarVista('reportes')">Reportes del Día</button>
+        </div>
+    </header>
+
     <div class="container">
-        <h1>Asados y Parrilla D' Kylian 🥩</h1>
-        
-        <div class="form-group">
-            <h2>Registrar Pedido</h2>
-            <input type="hidden" id="pedidoIdEdit" value="">
-            <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                    <label>Cliente:</label>
-                    <input type="text" id="cliente" placeholder="Nombre del cliente">
+
+        <!-- VISTA REGISTRAR PEDIDO -->
+        <div id="vista-pos" class="view-section active">
+            <div class="pos-grid">
+                <!-- Panel del Menú y Selección -->
+                <div class="card">
+                    <h2 id="tituloFormulario">Nuevo Pedido</h2>
+                    <input type="hidden" id="editPedidoId" value="">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cliente:</label>
+                            <input type="text" id="inputCliente" placeholder="Nombre del cliente">
+                        </div>
+                        <div class="form-group">
+                            <label>Mesa / Ubicación:</label>
+                            <input type="text" id="inputMesa" placeholder="Ej: Mesa 1, Llevar, etc.">
+                        </div>
+                    </div>
+
+                    <label>Tipo de Pedido:</label>
+                    <div class="tipo-pedido-selector">
+                        <div class="tipo-btn active" onclick="setTipoPedido('Mesa')">Mesa</div>
+                        <div class="tipo-btn" onclick="setTipoPedido('Llevar')">Llevar (+$0.50)</div>
+                        <div class="tipo-btn" onclick="setTipoPedido('Domicilio')">Domicilio</div>
+                    </div>
+
+                    <h3 style="margin-top: 15px;">Selecciona Productos:</h3>
+                    <div class="menu-grid" id="menuGridContainer">
+                        <!-- Generado por JS -->
+                    </div>
                 </div>
-                <div style="flex: 1;">
-                    <label>Mesa / Ubicación:</label>
-                    <input type="text" id="mesa" placeholder="Ej: Mesa 1, Mesa 2, etc.">
+
+                <!-- Resumen de Cuenta Actual -->
+                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h3>Detalle del Pedido</h3>
+                        <div class="order-items-list" id="orderItemsContainer">
+                            <div style="padding: 20px; text-align: center; color: var(--text-muted);">Sin ítems seleccionados</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="order-total-box">
+                            <span>Total a Pagar:</span>
+                            <span id="labelTotalPedido">$0.00</span>
+                        </div>
+                        <button class="btn-main" onclick="guardarPedido()" id="btnGuardarPedido">Guardar Pedido</button>
+                        <button class="btn-main" onclick="limpiarPedido()" style="background: #444; margin-top: 8px;">Cancelar / Limpiar</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="form-group">
-            <h3>Detalle de Platos</h3>
-            <div id="itemsContainer"></div>
-            <button type="button" onclick="agregarFila()">+ Agregar Item</button>
-        </div>
-
-        <div style="text-align: right; font-size: 20px; font-weight: bold; margin: 15px 0;" id="totalPedidoActual">
-            Total Pedido: $0.00
-        </div>
-
-        <button type="button" onclick="guardarPedido()" style="width: 100%; padding: 15px; font-size: 18px;" id="btnGuardar">Guardar Pedido</button>
-
-        <hr style="margin: 30px 0;">
-
-        <h2>Reporte del Día (Platos Cobrados)</h2>
-        <div style="display: flex; gap: 15px; flex-wrap: wrap;" id="resumenContenedor"></div>
-
-        <div class="cierre-box">
-            <div>
-                <strong>Fin de Jornada</strong><br>
-                <small>Realiza el cierre para limpiar el día y guardarlo en el historial.</small>
+        <!-- VISTA COMANDAS ACTIVAS -->
+        <div id="vista-comandas" class="view-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Comandas y Pedidos Activos</h2>
+                <button class="nav-btn" onclick="cargarComandas()">🔄 Actualizar</button>
             </div>
-            <div>
-                <button type="button" onclick="hacerCierre()" style="background: #d9534f; margin-right: 5px;">🔒 Hacer Cierre de Día</button>
-                <button type="button" onclick="verHistorico()" style="background: #0275d8;">📁 Ver Días Anteriores</button>
+            <div class="comandas-grid" id="comandasContainer">
+                <!-- Generado por JS -->
             </div>
         </div>
 
-        <hr style="margin: 30px 0;">
+        <!-- VISTA REPORTES -->
+        <div id="vista-reportes" class="view-section">
+            <h2>Reporte General del Día</h2>
+            
+            <div class="report-stats" style="margin-top: 15px;">
+                <div class="stat-box">
+                    <h4>Total Recaudado</h4>
+                    <p id="repTotalVentas">$0.00</p>
+                </div>
+                <div class="stat-box">
+                    <h4>Cuentas Cobradas</h4>
+                    <p id="repTotalCuentas">0</p>
+                </div>
+                <div class="stat-box">
+                    <h4>Ticket Promedio</h4>
+                    <p id="repTicketPromedio">$0.00</p>
+                </div>
+            </div>
 
-        <h2>Lista de Pedidos del Día</h2>
-        <div style="text-align: right; font-size: 18px; font-weight: bold; margin: 10px 0;" id="totalRecaudadoDia">
-            Total Recaudado Día: $0.00
+            <h3 style="margin-top: 20px;">Platos Vendidos Hoy</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plato / Producto</th>
+                            <th>Cantidad Vendida</th>
+                            <th>Total Generado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaResumenPlatos">
+                        <tr><td colspan="3" style="text-align: center;">No hay ventas cobradas hoy.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 30px; text-align: right;">
+                <button class="nav-btn" onclick="hacerCierreDia()" style="background: var(--danger); border: none; padding: 12px 20px;">🔒 Hacer Cierre de Jornada</button>
+            </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Cliente</th>
-                    <th>Mesa</th>
-                    <th>Detalle</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tablaPedidosBody">
-                <tr><td colspan="7" style="text-align: center;">Cargando pedidos...</td></tr>
-            </tbody>
-        </table>
+
     </div>
 
-    <!-- Modal Cobrar -->
-    <div id="modalCobrar" class="modal">
+    <!-- MODAL DE COBRO -->
+    <div id="modalCobro" class="modal">
         <div class="modal-content">
             <h3>Cobrar Pedido #<span id="modalIdPedido"></span></h3>
-            <p><strong>Cliente:</strong> <span id="modalCliente"></span></p>
-            <p><strong>Total a Pagar:</strong> $<span id="modalTotal"></span></p>
+            <p><strong>Cliente:</strong> <span id="modalClienteNombre"></span></p>
+            <p style="margin: 10px 0; font-size: 1.1rem;"><strong>Total:</strong> $<span id="modalTotalPagar"></span></p>
             
-            <div class="form-group" style="margin-top: 15px;">
+            <div class="form-group" style="margin-bottom: 15px;">
                 <label>Efectivo Recibido ($):</label>
-                <input type="number" id="efectivoRecibido" step="0.01" placeholder="0.00" oninput="calcularVuelto()">
+                <input type="number" id="inputEfectivo" step="0.01" placeholder="0.00" oninput="calcularVuelto()">
             </div>
             
-            <p style="font-size: 18px; font-weight: bold; color: #28a745;">Vuelto: $<span id="lblVuelto">0.00</span></p>
+            <p style="font-size: 1.1rem; font-weight: bold; color: var(--success); margin-bottom: 20px;">Vuelto: $<span id="labelVuelto">0.00</span></p>
             
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button type="button" onclick="confirmarCobro()" style="background: #28a745; flex: 1;">Confirmar Cobro</button>
-                <button type="button" onclick="cerrarModalCobro()" style="background: #6c757d; flex: 1;">Cancelar</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-main" onclick="confirmarCobro()" style="background: var(--success);">Confirmar Cobro</button>
+                <button class="btn-main" onclick="cerrarModalCobro()" style="background: #555;">Cancelar</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Histórico -->
-    <div id="modalHistorico" class="modal">
-        <div class="modal-content" style="width: 600px; max-height: 80vh; overflow-y: auto;">
-            <h3>Histórico de Cierres Anteriores</h3>
-            <div id="contenidoHistorico"></div>
-            <button type="button" onclick="cerrarModalHistorico()" style="background: #6c757d; width: 100%; margin-top: 15px;">Cerrar</button>
         </div>
     </div>
 
     <script>
-        // Lista exacta de productos guardada directamente con su categoría y precio
+        // MENÚ OFICIAL EXACTO
         const menuOficial = [
-            // Platos Principales
-            { nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, tipo: "principal" },
-            { nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, tipo: "principal" },
-            { nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, tipo: "principal" },
-            { nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, tipo: "principal" },
-            { nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, tipo: "principal" },
-            { nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, tipo: "principal" },
-            { nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, tipo: "principal" },
-            { nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, tipo: "principal" },
-            { nombre: "TERNERA ASADA", precio: 3.00, tipo: "principal" },
-            { nombre: "PICADITA (ARROZ MORO)", precio: 5.00, tipo: "principal" },
-            { nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, tipo: "principal" },
+            { id: 1, nombre: "CARNE ASADA (ARROZ BLANCO)", precio: 4.00, categoria: "Principal" },
+            { id: 2, nombre: "CARNE ASADA (ARROZ MORO)", precio: 4.00, categoria: "Principal" },
+            { id: 3, nombre: "POLLO ASADO (ARROZ BLANCO)", precio: 3.50, categoria: "Principal" },
+            { id: 4, nombre: "POLLO ASADO (ARROZ MORO)", precio: 3.50, categoria: "Principal" },
+            { id: 5, nombre: "CHULETA ASADA (ARROZ BLANCO)", precio: 3.50, categoria: "Principal" },
+            { id: 6, nombre: "CHULETA ASADA (ARROZ MORO)", precio: 3.50, categoria: "Principal" },
+            { id: 7, nombre: "COSTILLA ASADA (ARROZ MORO)", precio: 6.00, categoria: "Principal" },
+            { id: 8, nombre: "COSTILLA ASADA (ARROZ BLANCO)", precio: 6.00, categoria: "Principal" },
+            { id: 9, nombre: "TERNERA ASADA", precio: 3.00, categoria: "Principal" },
+            { id: 10, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Principal" },
+            { id: 11, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Principal" },
             
-            // Porciones
-            { nombre: "ARROZ MORO", precio: 2.00, tipo: "porcion" },
-            { nombre: "ARROZ BLANCO", precio: 2.00, tipo: "porcion" },
-            { nombre: "PATACONES", precio: 1.50, tipo: "porcion" },
-            { nombre: "TARRINA MENESTRA PEQUEÑA", precio: 1.25, tipo: "porcion" },
-            { nombre: "TARRINA MENESTRA GRANDE", precio: 2.50, tipo: "porcion" },
-
-            // Bebidas
-            { nombre: "COCA COLA LT", precio: 1.75, tipo: "bebida" },
-            { nombre: "GASEOSA VARIOS LT", precio: 1.50, tipo: "bebida" },
-            { nombre: "FUZE TEA", precio: 0.75, tipo: "bebida" },
-            { nombre: "FUZE TEA LT", precio: 1.25, tipo: "bebida" },
-            { nombre: "AGUA", precio: 0.50, tipo: "bebida" },
-            { nombre: "COLA PERSONAL", precio: 0.50, tipo: "bebida" }
-        ];
-
-        let historicoGlobal = [];
-
-        function generarOpcionesMenu() {
-            let html = '<option value="">-- Seleccionar Producto --</option>';
-            
-            // Agrupar visualmente
-            const principales = menuOficial.filter(p => p.tipo === "principal");
-            const porciones = menuOficial.filter(p => p.tipo === "porcion");
-            const bebidas = menuOficial.filter(p => p.tipo === "bebida");
-
-            html += '<optgroup label="--- PLATOS PRINCIPALES ---">';
-            principales.forEach(p => {
-                html += `<option value="${p.nombre}" data-precio="${p.precio}" data-tipo="${p.tipo}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
-            });
-            html += '</optgroup>';
-
-            html += '<optgroup label="--- PORCIONES ---">';
-            porciones.forEach(p => {
-                html += `<option value="${p.nombre}" data-precio="${p.precio}" data-tipo="${p.tipo}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
-            });
-            html += '</optgroup>';
-
-            html += '<optgroup label="--- BEBIDAS ---">';
-            bebidas.forEach(p => {
-                html += `<option value="${p.nombre}" data-precio="${p.precio}" data-tipo="${p.tipo}">${p.nombre} - $${p.precio.toFixed(2)}</option>`;
-            });
-            html += '</optgroup>';
-
-            return html;
-        }
-
-        function agregarFila(nombreSeleccionado = '', tipoConsumo = 'Mesa', precioCustom = null, cantidad = 1) {
-            const container = document.getElementById('itemsContainer');
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            
-            row.innerHTML = `
-                <select class="platoSelect" onchange="cambiarPlato(this)">
-                    ${generarOpcionesMenu()}
-                </select>
-                <select class="tipoSelect" onchange="cambiarTipoItem(this)">
-                    <option value="Mesa" ${tipoConsumo === 'Mesa' ? 'selected' : ''}>Mesa</option>
-                    <option value="Llevar" ${tipoConsumo === 'Llevar' ? 'selected' : ''}>Llevar</option>
-                </select>
-                <input type="number" class="price-field precioInput" step="0.01" value="${precioCustom !== null ? precioCustom : '0.00'}" placeholder="Precio" oninput="calcularTotalPedido()">
-                <input type="number" class="qty-field cantidadInput" min="1" value="${cantidad}" placeholder="Cant" oninput="calcularTotalPedido()">
-                <button type="button" onclick="this.parentElement.remove(); calcularTotalPedido();">X</button>
-            `;
-            container.appendChild(row);
-
-            if (nombreSeleccionado) {
-                const select = row.querySelector('.platoSelect');
-                select.value = nombreSeleccionado;
-                cambiarPlato(select, false);
-            }
-        }
-
-        function cambiarPlato(selectElem, actualizarPrecioDefault = true) {
-            const row = selectElem.parentElement;
-            const selectedOption = selectElem.options[selectElem.selectedIndex];
-            const precioInput = row.querySelector('.precioInput');
-            const tipoConsumo = row.querySelector('.tipoSelect').value;
-
-            if (selectedOption.value && actualizarPrecioDefault) {
-                let precioBase = parseFloat(selectedOption.getAttribute('data-precio')) || 0;
-                const tipoProd = selectedOption.getAttribute('data-tipo');
-
-                // Si es para llevar y es plato principal o porción, sumamos $0.50
-                if (tipoConsumo === 'Llevar' && (tipoProd === 'principal' || tipoProd === 'porcion')) {
-                    precioBase += 0.50;
-                }
-                precioInput.value = precioBase.toFixed(2);
-            }
-            calcularTotalPedido();
-        }
-
-        function cambiarTipoItem(tipoSelectElem) {
-            const row = tipoSelectElem.parentElement;
-            const selectPlato = row.querySelector('.platoSelect');
-            const selectedOption = selectPlato.options[selectPlato.selectedIndex];
-            const precioInput = row.querySelector('.precioInput');
-
-            if (selectedOption.value) {
-                let precioBase = parseFloat(selectedOption.getAttribute('data-precio')) || 0;
-                const tipoProd = selectedOption.getAttribute('data-tipo');
-                const tipoConsumo = tipoSelectElem.value;
-
-                if (tipoConsumo === 'Llevar' && (tipoProd === 'principal' || tipoProd === 'porcion')) {
-                    precioBase += 0.50;
-                }
-                precioInput.value = precioBase.toFixed(2);
-            }
-            calcularTotalPedido();
-        }
-
-        function calcularTotalPedido() {
-            const rows = document.querySelectorAll('.item-row');
-            let total = 0;
-            rows.forEach(row => {
-                const precio = parseFloat(row.querySelector('.precioInput').value) || 0;
-                const cantidad = parseInt(row.querySelector('.cantidadInput').value) || 0;
-                total += precio * cantidad;
-            });
-            document.getElementById('totalPedidoActual').textContent = `Total Pedido: $${total.toFixed(2)}`;
-            return total;
-        }
-
-        async function guardarPedido() {
-            const idEdit = document.getElementById('pedidoIdEdit').value;
-            const cliente = document.getElementById('cliente').value;
-            const mesa = document.getElementById('mesa').value || "Mesa 1";
-
-            const rows = document.querySelectorAll('.item-row');
-            const items = [];
-            rows.forEach(row => {
-                const selectPlato = row.querySelector('.platoSelect');
-                const nombrePlato = selectPlato.value;
-                const tipoConsumo = row.querySelector('.tipoSelect').value;
-                const precioUnitario = parseFloat(row.querySelector('.precioInput').value) || 0;
-                const cantidad = parseInt(row.querySelector('.cantidadInput').value) || 0;
-
-                if (nombrePlato && cantidad > 0) {
-                    items.push({ 
-                        plato: nombrePlato, // Mandamos el nombre exacto de forma limpia
-                        tipoConsumo, 
-                        precioUnitario, 
-                        cantidad 
-                    });
-                }
-            });
-
-            if (items.length === 0) {
-                alert("Agrega al menos un plato al pedido.");
-                return;
-            }
-
-            const url = idEdit ? `/api/pedidos/${idEdit}` : '/api/pedidos';
-            const method = idEdit ? 'PUT' : 'POST';
-
-            try {
-                const res = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ cliente, mesa, items })
-                });
-
-                if (res.ok) {
-                    alert(idEdit ? "¡Pedido actualizado con éxito!" : "¡Pedido registrado con éxito!");
-                    limpiarFormulario();
-                    cargarPedidos();
-                } else {
-                    alert("Error al guardar el pedido");
-                }
-            } catch (e) {
-                alert("Error de conexión al guardar el pedido");
-            }
-        }
-
-        function limpiarFormulario() {
-            document.getElementById('pedidoIdEdit').value = '';
-            document.getElementById('cliente').value = '';
-            document.getElementById('mesa').value = '';
-            document.getElementById('itemsContainer').innerHTML = '';
-            agregarFila();
-            document.getElementById('btnGuardar').textContent = "Guardar Pedido";
-            calcularTotalPedido();
-        }
-
-        async function cargarPedidos() {
-            try {
-                const res = await fetch('/api/pedidos');
-                if (!res.ok) throw new Error("Error en la respuesta del servidor");
-                const data = await res.json();
-                
-                document.getElementById('totalRecaudadoDia').textContent = `Total Recaudado Día: $${(data.totalDineroRecaudado || 0).toFixed(2)}`;
-                historicoGlobal = data.historicoCierres || [];
-
-                let resumenHTML = '';
-                if (data.resumenProductos) {
-                    for (let [nombre, info] of Object.entries(data.resumenProductos)) {
-                        if (info.cantidad > 0) {
-                            resumenHTML += `<div style="background: #fff; border: 1px solid #ccc; padding: 8px 12px; border-radius: 4px;">
-                                <strong>${nombre}:</strong> ${info.cantidad}
-                            </div>`;
-                        }
-                    }
-                }
-                document.getElementById('resumenContenedor').innerHTML = resumenHTML || '<p>No hay platos cobrados aún hoy.</p>';
-
-                let tbody = '';
-                if (data.pedidos && data.pedidos.length > 0) {
-                    data.pedidos.forEach(p => {
-                        let detalleStr = p.detalle.map(d => `${d.cantidad}x ${d.plato} (${d.tipoConsumo})`).join('<br>');
-                        let estadoBadge = p.estado === 'Cobrado' ? '<span class="badge-cobrado">Cobrado</span>' : '<span class="badge-pendiente">Pendiente</span>';
-                        
-                        let acciones = '';
-                        if (p.estado === 'Pendiente') {
-                            acciones = `
-                                <button onclick='editarPedido(${JSON.stringify(p)})' style="background: #f0ad4e; padding: 5px 10px; font-size: 12px; margin-bottom: 3px;">Editar</button>
-                                <button onclick='abrirModalCobro(${JSON.stringify(p)})' style="background: #5cb85c; padding: 5px 10px; font-size: 12px;">Cobrar</button>
-                            `;
-                        } else {
-                            acciones = `<small>Efectivo: $${p.efectivoRecibido?.toFixed(2) || '0.00'}<br>Vuelto: $${p.vuelto?.toFixed(2) || '0.00'}</small>`;
-                        }
-
-                        tbody += `
-                            <tr>
-                                <td>${p.id}</td>
-                                <td>${p.cliente}</td>
-                                <td>${p.mesa}</td>
-                                <td>${detalleStr}</td>
-                                <td>$${p.total.toFixed(2)}</td>
-                                <td>${estadoBadge}</td>
-                                <td>${acciones}</td>
-                            </tr>
-                        `;
-                    });
-                }
-                document.getElementById('tablaPedidosBody').innerHTML = tbody || '<tr><td colspan="7" style="text-align: center;">No hay pedidos registrados hoy.</td></tr>';
-
-            } catch (error) {
-                console.error("Error al cargar pedidos:", error);
-                document.getElementById('tablaPedidosBody').innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay pedidos registrados hoy.</td></tr>';
-            }
-        }
-
-        function editarPedido(pedido) {
-            document.getElementById('pedidoIdEdit').value = pedido.id;
-            document.getElementById('cliente').value = pedido.cliente;
-            document.getElementById('mesa').value = pedido.mesa;
-            document.getElementById('itemsContainer').innerHTML = '';
-
-            pedido.detalle.forEach(d => {
-                agregarFila(d.plato, d.tipoConsumo, d.precioUnitario, d.cantidad);
-            });
-
-            document.getElementById('btnGuardar').textContent = "Actualizar Pedido";
-            window.scrollTo({ top: `0`, behavior: 'smooth' });
-        }
-
-        let pedidoACobrar = null;
-        function abrirModalCobro(pedido) {
-            pedidoACobrar = pedido;
-            document.getElementById('modalIdPedido').textContent = pedido.id;
-            document.getElementById('modalCliente').textContent = pedido.cliente;
-            document.getElementById('modalTotal').textContent = pedido.total.toFixed(2);
-            document.getElementById('efectivoRecibido').value = '';
-            document.getElementById('lblVuelto').textContent = '0.00';
-            document.getElementById('modalCobrar').style.display = 'flex';
-        }
-
-        function cerrarModalCobro() {
-            document.getElementById('modalCobrar').style.display = 'none';
-            pedidoACobrar = null;
-        }
-
-        function calcularVuelto() {
-            const efectivo = parseFloat(document.getElementById('efectivoRecibido').value) || 0;
-            const vuelto = efectivo - (pedidoACobrar ? pedidoACobrar.total : 0);
-            document.getElementById('lblVuelto').textContent = vuelto >= 0 ? vuelto.toFixed(2) : '0.00';
-        }
-
-        async function confirmarCobro() {
-            const efectivo = parseFloat(document.getElementById('efectivoRecibido').value) || 0;
-            if (efectivo < pedidoACobrar.total) {
-                alert('El efectivo recibido es menor al total del pedido.');
-                return;
-            }
-
-            const res = await fetch(`/api/pedidos/${pedidoACobrar.id}/cobrar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ efectivoRecibido: efectivo })
-            });
-
-            if (res.ok) {
-                alert('¡Pedido cobrado con éxito!');
-                cerrarModalCobro();
-                cargarPedidos();
-            } else {
-                alert('Error al procesar el cobro');
-            }
-        }
-
-        async function hacerCierre() {
-            if (!confirm("¿Estás seguro de realizar el cierre de día? Esto limpiará los pedidos actuales y guardará el reporte.")) return;
-
-            const res = await fetch('/api/cierre-dia', { method: 'POST' });
-            const data = await res.json();
-
-            if (res.ok) {
-                alert(data.mensaje);
-                cargarPedidos();
-            } else {
-                alert(data.error || "Error al realizar el cierre");
-            }
-        }
-
-        function verHistorico() {
-            let html = '';
-            if (historicoGlobal.length === 0) {
-                html = '<p>No hay cierres anteriores registrados.</p>';
-            } else {
-                historicoGlobal.forEach(c => {
-                    html += `<div style="border-bottom: 1px solid #ddd; margin-bottom: 15px; padding-bottom: 10px;">
-                        <strong>Fecha:</strong> ${c.fecha} | <strong>Total Ventas:</strong> $${c.totalVentas.toFixed(2)} | <strong>Pedidos:</strong> ${c.totalPedidos}
-                    </div>`;
-                });
-            }
-            document.getElementById('contenidoHistorico').innerHTML = html;
-            document.getElementById('modalHistorico').style.display = 'flex';
-        }
-
-        function cerrarModalHistorico() {
-            document.getElementById('modalHistorico').style.display = 'none';
-        }
-
-        window.onload = function() {
-            agregarFila();
-            cargarPedidos();
-        };
-    </script>
-</body>
-</html>
+            { id: 12, nombre: "ARROZ MORO", precio: 2.00, categoria: "Porcion" },
+            { id: 13, nombre: "ARROZ BLANCO", precio: 2.00, categoria: "Porcion" },
+            { id: 14, nombre: "PATACONES", precio: 1.50, categoria: "Porcion"
