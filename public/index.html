@@ -364,6 +364,22 @@
                 </table>
             </div>
 
+            <h3 style="margin-top: 30px;">Historial de Cierres Anteriores</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha del Cierre</th>
+                            <th>Total Pedidos</th>
+                            <th>Total Recaudado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHistoricoCierres">
+                        <tr><td colspan="3" style="text-align: center;">No hay cierres históricos registrados.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div style="margin-top: 30px; text-align: right;">
                 <button class="nav-btn" onclick="hacerCierreDia()" style="background: var(--danger); border: none; padding: 12px 20px;">🔒 Hacer Cierre de Jornada</button>
             </div>
@@ -818,27 +834,41 @@
 
                 if (keys.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay ventas cobradas hoy.</td></tr>';
-                    return;
+                } else {
+                    tbody.innerHTML = keys.map(plato => {
+                        const info = resumen[plato];
+                        const subtotalGen = info.cantidad * info.precio;
+                        return `
+                            <tr>
+                                <td>${plato}</td>
+                                <td>${info.cantidad}</td>
+                                <td>$${subtotalGen.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    }).join('');
                 }
 
-                tbody.innerHTML = keys.map(plato => {
-                    const info = resumen[plato];
-                    const subtotalGen = info.cantidad * info.precio;
-                    return `
+                // Renderizar Histórico de Cierres Anteriores
+                const tbodyHistorico = document.getElementById('tablaHistoricoCierres');
+                const historico = data.historicoCierres || [];
+                if (historico.length === 0) {
+                    tbodyHistorico.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay cierres históricos registrados.</td></tr>';
+                } else {
+                    tbodyHistorico.innerHTML = historico.map(c => `
                         <tr>
-                            <td>${plato}</td>
-                            <td>${info.cantidad}</td>
-                            <td>$${subtotalGen.toFixed(2)}</td>
+                            <td><strong>${c.fecha}</strong></td>
+                            <td>${c.totalPedidos}</td>
+                            <td style="color: var(--accent); font-weight: bold;">$${c.totalVentas.toFixed(2)}</td>
                         </tr>
-                    `;
-                }).join('');
+                    `).join('');
+                }
             } catch (e) {
                 console.error("Error al cargar reportes", e);
             }
         }
 
         async function hacerCierreDia() {
-            if (!confirm("¿Estás seguro de realizar el cierre de jornada? Se vaciarán las cuentas cobradas.")) return;
+            if (!confirm("¿Estás seguro de realizar el cierre de jornada? Se archivarán las cuentas actuales.")) return;
             try {
                 const res = await fetch('/api/cierre-dia', { method: 'POST' });
                 const data = await res.json();
