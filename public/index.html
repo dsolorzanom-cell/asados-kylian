@@ -350,9 +350,7 @@
                         <div class="cat-btn" onclick="setCategoriaMenu('Bebida')">🥤 Bebidas</div>
                     </div>
 
-                    <div class="menu-grid" id="menuGridContainer">
-                        <!-- Generado dinámicamente por categoría -->
-                    </div>
+                    <div class="menu-grid" id="menuGridContainer"></div>
                 </div>
 
                 <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -431,14 +429,15 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Fecha del Cierre</th>
-                            <th>Total Pedidos</th>
-                            <th>Desglose de Ventas (Platos, Porciones, Bebidas)</th>
-                            <th>Total Recaudado</th>
+                            <th>Fecha</th>
+                            <th>Pedidos</th>
+                            <th>Desglose de Ventas (Platos / Porciones / Bebidas)</th>
+                            <th>Montos (Total / Efectivo / Transf.)</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody id="tablaHistoricoCierres">
-                        <tr><td colspan="4" style="text-align: center;">No hay cierres históricos registrados.</td></tr>
+                        <tr><td colspan="5" style="text-align: center;">No hay cierres históricos registrados.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -462,9 +461,7 @@
                             <th>Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaGestionPrecios">
-                        <!-- Generado dinámicamente -->
-                    </tbody>
+                    <tbody id="tablaGestionPrecios"></tbody>
                 </table>
             </div>
         </div>
@@ -517,15 +514,11 @@
             { id: 10, nombre: "TERNERA ASADA (ARROZ BLANCO)", precio: 3.00, categoria: "Principal" },
             { id: 11, nombre: "PICADITA (ARROZ MORO)", precio: 5.00, categoria: "Principal" },
             { id: 12, nombre: "PICADITA (ARROZ BLANCO)", precio: 5.00, categoria: "Principal" },
-            
-            // Platos con patacones
             { id: 13, nombre: "CARNE ASADA CON PATACONES", precio: 4.00, categoria: "Principal" },
             { id: 14, nombre: "POLLO ASADO CON PATACONES", precio: 3.50, categoria: "Principal" },
             { id: 15, nombre: "CHULETA ASADA CON PATACONES", precio: 3.50, categoria: "Principal" },
             { id: 16, nombre: "COSTILLA ASADA CON PATACONES", precio: 6.00, categoria: "Principal" },
             { id: 17, nombre: "PICADITA CON PATACONES", precio: 5.00, categoria: "Principal" },
-
-            // Porciones y adiciones
             { id: 18, nombre: "ARROZ MORO", precio: 2.00, categoria: "Porcion" },
             { id: 19, nombre: "ARROZ BLANCO", precio: 2.00, categoria: "Porcion" },
             { id: 20, nombre: "PATACONES", precio: 1.50, categoria: "Porcion" },
@@ -537,8 +530,6 @@
             { id: 26, nombre: "PORCION DE PICADA", precio: 3.50, categoria: "Porcion" },
             { id: 27, nombre: "PORCION DE COSTILLA", precio: 4.50, categoria: "Porcion" },
             { id: 28, nombre: "PORCION DE TERNERA", precio: 1.25, categoria: "Porcion" },
-
-            // Bebidas
             { id: 29, nombre: "COCA COLA LT", precio: 1.75, categoria: "Bebida" },
             { id: 30, nombre: "GASEOSA VARIOS LT", precio: 1.50, categoria: "Bebida" },
             { id: 31, nombre: "FUZE TEA", precio: 0.75, categoria: "Bebida" },
@@ -583,8 +574,7 @@
 
         function setCategoriaMenu(cat) {
             categoriaSeleccionada = cat;
-            const botones = document.querySelectorAll('.cat-btn');
-            botones.forEach(btn => {
+            document.querySelectorAll('.cat-btn').forEach(btn => {
                 if (btn.getAttribute('onclick').includes(cat)) btn.classList.add('active');
                 else btn.classList.remove('active');
             });
@@ -594,9 +584,7 @@
         function renderMenuGrid() {
             const container = document.getElementById('menuGridContainer');
             if (!container) return;
-
             const filtrados = menuOficial.filter(i => i.categoria === categoriaSeleccionada);
-
             container.innerHTML = filtrados.map(item => `
                 <button type="button" class="menu-item-btn" onclick="agregarItemPedido(${item.id})">
                     <span class="menu-item-name">${item.nombre}</span>
@@ -637,8 +625,7 @@
 
         function tipoPedidoSelectorUi(tipo) {
             tipoPedidoSeleccionado = tipo;
-            const botones = document.querySelectorAll('.tipo-pedido-selector .tipo-btn');
-            botones.forEach(btn => {
+            document.querySelectorAll('.tipo-pedido-selector .tipo-btn').forEach(btn => {
                 if (btn.textContent.includes(tipo)) btn.classList.add('active');
                 else btn.classList.remove('active');
             });
@@ -646,8 +633,7 @@
 
         function setMetodoPago(metodo) {
             metodoPagoSeleccionado = metodo;
-            const botones = document.querySelectorAll('.metodo-btn');
-            botones.forEach(btn => {
+            document.querySelectorAll('.metodo-btn').forEach(btn => {
                 if (btn.textContent.includes(metodo)) btn.classList.add('active');
                 else btn.classList.remove('active');
             });
@@ -669,18 +655,13 @@
             let recargo = 0;
 
             if (tipoConsumoItem === 'Llevar') {
-                if (plato.categoria === 'Principal') {
-                    recargo = 0.50;
-                } else if (plato.categoria === 'Porcion') {
-                    if (!plato.nombre.includes('MENESTRA')) {
-                        recargo = 0.25;
-                    }
-                }
+                if (plato.categoria === 'Principal') recargo = 0.50;
+                else if (plato.categoria === 'Porcion' && !plato.nombre.includes('MENESTRA')) recargo = 0.25;
             }
 
             let precioFinal = plato.precio + recargo;
-
             const existente = pedidoActualItems.find(i => i.id === idPlato && i.tipoConsumo === tipoConsumoItem);
+            
             if (existente) {
                 existente.cantidad++;
             } else {
@@ -749,7 +730,6 @@
             }
 
             const total = pedidoActualItems.reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
-            
             const payload = {
                 cliente,
                 mesa,
@@ -804,8 +784,8 @@
                 const res = await fetch('/api/pedidos');
                 const data = await res.json();
                 const container = document.getElementById('comandasContainer');
-                
                 const pedidos = data.pedidos || [];
+
                 if (pedidos.length === 0) {
                     container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay pedidos activos.</p>';
                     return;
@@ -847,7 +827,6 @@
             document.getElementById('inputMesa').value = p.mesa;
             document.getElementById('tituloFormulario').textContent = `Editar Pedido #${p.id}`;
             document.getElementById('btnGuardarPedido').textContent = 'Actualizar Pedido';
-            
             tipoPedidoSelectorUi(p.tipo || 'Mesa');
 
             pedidoActualItems = p.detalle.map(d => {
@@ -901,7 +880,6 @@
 
         async function confirmarCobro() {
             let efectivoRecibido = pedidoCobrandoGlobal.total;
-
             if (metodoPagoSeleccionado === 'Efectivo') {
                 efectivoRecibido = parseFloat(document.getElementById('inputEfectivo').value) || 0;
                 if (efectivoRecibido < pedidoCobrandoGlobal.total) {
@@ -914,10 +892,7 @@
                 const res = await fetch(`/api/pedidos/${pedidoCobrandoGlobal.id}/cobrar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        efectivoRecibido: efectivoRecibido,
-                        metodoPago: metodoPagoSeleccionado
-                    })
+                    body: JSON.stringify({ efectivoRecibido, metodoPago: metodoPagoSeleccionado })
                 });
 
                 if (res.ok) {
@@ -948,11 +923,8 @@
                 let totalEfectivo = 0;
                 let totalTransferencia = 0;
                 cobrados.forEach(p => {
-                    if (p.metodoPago === 'Transferencia') {
-                        totalTransferencia += p.total;
-                    } else {
-                        totalEfectivo += p.total;
-                    }
+                    if (p.metodoPago === 'Transferencia') totalTransferencia += p.total;
+                    else totalEfectivo += p.total;
                 });
 
                 document.getElementById('repTotalEfectivo').textContent = `$${totalEfectivo.toFixed(2)}`;
@@ -967,25 +939,17 @@
                 } else {
                     tbody.innerHTML = keys.map(plato => {
                         const info = resumen[plato];
-                        const subtotalGen = info.cantidad * info.precio;
-                        return `
-                            <tr>
-                                <td>${plato}</td>
-                                <td>${info.cantidad}</td>
-                                <td>$${subtotalGen.toFixed(2)}</td>
-                            </tr>
-                        `;
+                        const sub = info.cantidad * info.precio;
+                        return `<tr><td>${plato}</td><td>${info.cantidad}</td><td>$${sub.toFixed(2)}</td></tr>`;
                     }).join('');
                 }
 
-                const fechaHoyStr = new Date().toLocaleDateString('en-US');
-                const historico = (data.historicoCierres || []).filter(c => {
-                    return !c.fecha.includes("10/26/2026");
-                });
-
+                // Cierres históricos (se muestran todos)
                 const tbodyHistorico = document.getElementById('tablaHistoricoCierres');
+                const historico = data.historicoCierres || [];
+
                 if (historico.length === 0) {
-                    tbodyHistorico.innerHTML = '<tr><td colspan="4" style="text-align: center;">No hay cierres históricos registrados de días anteriores.</td></tr>';
+                    tbodyHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay cierres históricos registrados.</td></tr>';
                 } else {
                     tbodyHistorico.innerHTML = historico.map(c => {
                         let detalleHtml = '<ul style="padding-left: 15px; font-size: 0.85rem; color: #ccc;">';
@@ -995,18 +959,51 @@
                         }
                         detalleHtml += '</ul>';
 
+                        const efec = c.totalEfectivo !== undefined ? c.totalEfectivo : c.totalVentas;
+                        const transf = c.totalTransferencia !== undefined ? c.totalTransferencia : 0;
+
                         return `
                             <tr>
                                 <td><strong>${c.fecha}</strong></td>
                                 <td>${c.totalPedidos}</td>
                                 <td>${detalleHtml}</td>
-                                <td style="color: var(--accent); font-weight: bold;">$${c.totalVentas.toFixed(2)}</td>
+                                <td style="font-size: 0.9rem;">
+                                    <strong style="color: var(--accent);">Total: $${c.totalVentas.toFixed(2)}</strong><br>
+                                    <span style="color: #aaa;">Efectivo: $${efec.toFixed(2)}</span><br>
+                                    <span style="color: #aaa;">Transf: $${transf.toFixed(2)}</span>
+                                </td>
+                                <td>
+                                    <button class="nav-btn" style="background: var(--danger); border: none; padding: 6px 10px;" onclick="eliminarCierre('${c._id}')">Eliminar</button>
+                                </td>
                             </tr>
                         `;
                     }).join('');
                 }
             } catch (e) {
                 console.error("Error al cargar reportes", e);
+            }
+        }
+
+        async function eliminarCierre(idCierre) {
+            const claveIngresada = prompt("Ingrese la clave de seguridad para eliminar este cierre:");
+            if (claveIngresada === null) return; // Si cancela
+
+            try {
+                const res = await fetch(`/api/cierres/${idCierre}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clave: claveIngresada })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.mensaje);
+                    cargarReportes();
+                } else {
+                    alert(data.error || "Clave incorrecta o error al eliminar.");
+                }
+            } catch (e) {
+                alert("Error de conexión.");
             }
         }
 
