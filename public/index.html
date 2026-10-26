@@ -257,13 +257,13 @@
             background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
-            background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 10px; width: 350px; max-width: 90%;
+            background: var(--bg-card); border: 1px solid var(--border); padding: 25px; border-radius: 10px; width: 380px; max-width: 90%;
         }
         .modal-content h3 { color: var(--accent); margin-bottom: 15px; }
 
         .report-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -275,11 +275,34 @@
             text-align: center;
         }
         .stat-box h4 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
-        .stat-box p { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+        .stat-box p { font-size: 1.4rem; font-weight: bold; color: var(--accent); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--bg-card); border-radius: 8px; overflow: hidden; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         th { background: #252525; color: var(--accent); }
+
+        .metodo-pago-selector {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .metodo-btn {
+            flex: 1;
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .metodo-btn.active {
+            background: var(--success);
+            color: white;
+            border-color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -366,8 +389,16 @@
             <h2>Reporte General del Día</h2>
             <div class="report-stats" style="margin-top: 15px;">
                 <div class="stat-box">
-                    <h4>Total Recaudado</h4>
+                    <h4>Total Recaudado (Suma)</h4>
                     <p id="repTotalVentas">$0.00</p>
+                </div>
+                <div class="stat-box">
+                    <h4>Efectivo</h4>
+                    <p id="repTotalEfectivo">$0.00</p>
+                </div>
+                <div class="stat-box">
+                    <h4>Transferencias</h4>
+                    <p id="repTotalTransferencia">$0.00</p>
                 </div>
                 <div class="stat-box">
                     <h4>Cuentas Cobradas</h4>
@@ -445,14 +476,25 @@
         <div class="modal-content">
             <h3>Cobrar Pedido #<span id="modalIdPedido"></span></h3>
             <p><strong>Cliente:</strong> <span id="modalClienteNombre"></span></p>
-            <p style="margin: 10px 0; font-size: 1.1rem;"><strong>Total:</strong> $<span id="modalTotalPagar"></span></p>
+            <p style="margin: 8px 0 12px 0; font-size: 1.1rem;"><strong>Total:</strong> $<span id="modalTotalPagar"></span></p>
             
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label>Efectivo Recibido ($):</label>
-                <input type="number" id="inputEfectivo" step="0.01" placeholder="0.00" oninput="calcularVuelto()">
+            <label>Método de Pago:</label>
+            <div class="metodo-pago-selector">
+                <div class="metodo-btn active" onclick="setMetodoPago('Efectivo')">💵 Efectivo</div>
+                <div class="metodo-btn" onclick="setMetodoPago('Transferencia')">📱 Transferencia</div>
             </div>
-            
-            <p style="font-size: 1.1rem; font-weight: bold; color: var(--success); margin-bottom: 20px;">Vuelto: $<span id="labelVuelto">0.00</span></p>
+
+            <div id="seccionEfectivo">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label>Efectivo Recibido ($):</label>
+                    <input type="number" id="inputEfectivo" step="0.01" placeholder="0.00" oninput="calcularVuelto()">
+                </div>
+                <p style="font-size: 1rem; font-weight: bold; color: var(--success); margin-bottom: 15px;">Vuelto: $<span id="labelVuelto">0.00</span></p>
+            </div>
+
+            <div id="seccionTransferencia" style="display: none; margin-bottom: 15px; color: var(--accent); font-size: 0.9rem; text-align: center; background: #252525; padding: 10px; border-radius: 6px;">
+                Pago registrado por Transferencia bancaria.
+            </div>
             
             <div style="display: flex; gap: 10px;">
                 <button class="btn-main" onclick="confirmarCobro()" style="background: var(--success);">Confirmar Cobro</button>
@@ -510,6 +552,7 @@
         let pedidoActualItems = [];
         let tipoPedidoSeleccionado = "Mesa";
         let categoriaSeleccionada = "Principal";
+        let metodoPagoSeleccionado = "Efectivo";
         let pedidoCobrandoGlobal = null;
 
         window.onload = function() {
@@ -599,6 +642,23 @@
                 if (btn.textContent.includes(tipo)) btn.classList.add('active');
                 else btn.classList.remove('active');
             });
+        }
+
+        function setMetodoPago(metodo) {
+            metodoPagoSeleccionado = metodo;
+            const botones = document.querySelectorAll('.metodo-btn');
+            botones.forEach(btn => {
+                if (btn.textContent.includes(metodo)) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            if (metodo === 'Efectivo') {
+                document.getElementById('seccionEfectivo').style.display = 'block';
+                document.getElementById('seccionTransferencia').style.display = 'none';
+            } else {
+                document.getElementById('seccionEfectivo').style.display = 'none';
+                document.getElementById('seccionTransferencia').style.display = 'block';
+            }
         }
 
         function agregarItemPedido(idPlato) {
@@ -765,6 +825,7 @@
                             <span>Total:</span>
                             <span style="color: var(--accent);">$${p.total.toFixed(2)}</span>
                         </div>
+                        ${p.metodoPago ? `<div style="font-size: 0.75rem; color: var(--success); margin-top: 4px;">Pagado con: ${p.metodoPago}</div>` : ''}
                         <div class="comanda-actions">
                             ${p.estado === 'Pendiente' ? `
                                 <button type="button" class="btn-editar" onclick='editarPedido(${JSON.stringify(p)})'>Editar</button>
@@ -822,6 +883,7 @@
             document.getElementById('modalTotalPagar').textContent = p.total.toFixed(2);
             document.getElementById('inputEfectivo').value = '';
             document.getElementById('labelVuelto').textContent = '0.00';
+            setMetodoPago('Efectivo');
             document.getElementById('modalCobro').style.display = 'flex';
         }
 
@@ -838,17 +900,24 @@
         }
 
         async function confirmarCobro() {
-            const efectivo = parseFloat(document.getElementById('inputEfectivo').value) || 0;
-            if (efectivo < pedidoCobrandoGlobal.total) {
-                alert("El efectivo recibido es menor al total de la cuenta.");
-                return;
+            let efectivoRecibido = pedidoCobrandoGlobal.total;
+
+            if (metodoPagoSeleccionado === 'Efectivo') {
+                efectivoRecibido = parseFloat(document.getElementById('inputEfectivo').value) || 0;
+                if (efectivoRecibido < pedidoCobrandoGlobal.total) {
+                    alert("El efectivo recibido es menor al total de la cuenta.");
+                    return;
+                }
             }
 
             try {
                 const res = await fetch(`/api/pedidos/${pedidoCobrandoGlobal.id}/cobrar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ efectivoRecibido: efectivo })
+                    body: JSON.stringify({ 
+                        efectivoRecibido: efectivoRecibido,
+                        metodoPago: metodoPagoSeleccionado
+                    })
                 });
 
                 if (res.ok) {
@@ -876,6 +945,19 @@
                 const promedio = cobrados.length > 0 ? totalVentas / cobrados.length : 0;
                 document.getElementById('repTicketPromedio').textContent = `$${promedio.toFixed(2)}`;
 
+                let totalEfectivo = 0;
+                let totalTransferencia = 0;
+                cobrados.forEach(p => {
+                    if (p.metodoPago === 'Transferencia') {
+                        totalTransferencia += p.total;
+                    } else {
+                        totalEfectivo += p.total;
+                    }
+                });
+
+                document.getElementById('repTotalEfectivo').textContent = `$${totalEfectivo.toFixed(2)}`;
+                document.getElementById('repTotalTransferencia').textContent = `$${totalTransferencia.toFixed(2)}`;
+
                 const tbody = document.getElementById('tablaResumenPlatos');
                 const resumen = data.resumenProductos || {};
                 const keys = Object.keys(resumen);
@@ -896,11 +978,9 @@
                     }).join('');
                 }
 
-                // Filtrar para excluir la fecha de hoy (ej: 10/26/2026) y mostrar solo cierres anteriores
-                const fechaHoyStr = new Date().toLocaleDateString('en-US'); // Formato MM/DD/YYYY o según el servidor
+                const fechaHoyStr = new Date().toLocaleDateString('en-US');
                 const historico = (data.historicoCierres || []).filter(c => {
-                    // Si la fecha del cierre coincide con la fecha de hoy, se oculta del historial anterior
-                    return !c.fecha.includes("10/26/2026"); 
+                    return !c.fecha.includes("10/26/2026");
                 });
 
                 const tbodyHistorico = document.getElementById('tablaHistoricoCierres');
