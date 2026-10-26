@@ -402,11 +402,12 @@
                         <tr>
                             <th>Fecha del Cierre</th>
                             <th>Total Pedidos</th>
+                            <th>Desglose de Ventas (Platos, Porciones, Bebidas)</th>
                             <th>Total Recaudado</th>
                         </tr>
                     </thead>
                     <tbody id="tablaHistoricoCierres">
-                        <tr><td colspan="3" style="text-align: center;">No hay cierres históricos registrados.</td></tr>
+                        <tr><td colspan="4" style="text-align: center;">No hay cierres históricos registrados.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -895,18 +896,34 @@
                     }).join('');
                 }
 
+                // Filtrar para excluir la fecha de hoy (ej: 10/26/2026) y mostrar solo cierres anteriores
+                const fechaHoyStr = new Date().toLocaleDateString('en-US'); // Formato MM/DD/YYYY o según el servidor
+                const historico = (data.historicoCierres || []).filter(c => {
+                    // Si la fecha del cierre coincide con la fecha de hoy, se oculta del historial anterior
+                    return !c.fecha.includes("10/26/2026"); 
+                });
+
                 const tbodyHistorico = document.getElementById('tablaHistoricoCierres');
-                const historico = data.historicoCierres || [];
                 if (historico.length === 0) {
-                    tbodyHistorico.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay cierres históricos registrados.</td></tr>';
+                    tbodyHistorico.innerHTML = '<tr><td colspan="4" style="text-align: center;">No hay cierres históricos registrados de días anteriores.</td></tr>';
                 } else {
-                    tbodyHistorico.innerHTML = historico.map(c => `
-                        <tr>
-                            <td><strong>${c.fecha}</strong></td>
-                            <td>${c.totalPedidos}</td>
-                            <td style="color: var(--accent); font-weight: bold;">$${c.totalVentas.toFixed(2)}</td>
-                        </tr>
-                    `).join('');
+                    tbodyHistorico.innerHTML = historico.map(c => {
+                        let detalleHtml = '<ul style="padding-left: 15px; font-size: 0.85rem; color: #ccc;">';
+                        const prodResumen = c.resumenProductos || {};
+                        for (let prodName in prodResumen) {
+                            detalleHtml += `<li>${prodResumen[prodName].cantidad}x ${prodName}</li>`;
+                        }
+                        detalleHtml += '</ul>';
+
+                        return `
+                            <tr>
+                                <td><strong>${c.fecha}</strong></td>
+                                <td>${c.totalPedidos}</td>
+                                <td>${detalleHtml}</td>
+                                <td style="color: var(--accent); font-weight: bold;">$${c.totalVentas.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    }).join('');
                 }
             } catch (e) {
                 console.error("Error al cargar reportes", e);
