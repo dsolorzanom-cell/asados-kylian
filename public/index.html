@@ -62,7 +62,7 @@
 
         .pos-grid {
             display: grid;
-            grid-template-columns: 1.2fr 1fr;
+            grid-template-columns: 1.3fr 1fr;
             gap: 20px;
         }
 
@@ -117,27 +117,37 @@
             border-color: var(--accent);
         }
 
+        .menu-section-title {
+            font-size: 0.95rem;
+            color: var(--accent);
+            margin: 15px 0 8px 0;
+            font-weight: bold;
+            border-left: 3px solid var(--accent);
+            padding-left: 8px;
+        }
+
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 10px;
-            max-height: 450px;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            max-height: 200px;
             overflow-y: auto;
             padding-right: 5px;
+            margin-bottom: 10px;
         }
 
         .menu-item-btn {
             background: #252525;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 10px;
+            padding: 8px;
             color: white;
             cursor: pointer;
             text-align: left;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 90px;
+            height: 80px;
             transition: all 0.15s;
         }
         .menu-item-btn:hover {
@@ -145,8 +155,8 @@
             background: #2f2f2f;
             transform: translateY(-2px);
         }
-        .menu-item-name { font-size: 0.75rem; font-weight: bold; line-height: 1.1; }
-        .menu-item-price { font-size: 0.9rem; color: var(--accent); font-weight: bold; margin-top: 5px; }
+        .menu-item-name { font-size: 0.7rem; font-weight: bold; line-height: 1.1; }
+        .menu-item-price { font-size: 0.85rem; color: var(--accent); font-weight: bold; margin-top: 4px; }
 
         .order-items-list {
             max-height: 250px;
@@ -296,9 +306,18 @@
                     </div>
 
                     <h3 style="margin-top: 15px;">Selecciona Productos:</h3>
-                    <div class="menu-grid" id="menuGridContainer">
-                        <!-- Generado dinámicamente -->
-                    </div>
+                    
+                    <!-- SECCIÓN PLATOS PRINCIPALES -->
+                    <div class="menu-section-title">🥩 Platos Principales</div>
+                    <div class="menu-grid" id="menuPrincipalesContainer"></div>
+
+                    <!-- SECCIÓN PORCIONES -->
+                    <div class="menu-section-title">🍟 Porciones y Adiciones</div>
+                    <div class="menu-grid" id="menuPorcionesContainer"></div>
+
+                    <!-- SECCIÓN BEBIDAS -->
+                    <div class="menu-section-title">🥤 Bebidas</div>
+                    <div class="menu-grid" id="menuBebidasContainer"></div>
                 </div>
 
                 <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -505,14 +524,26 @@
         }
 
         function renderMenuGrid() {
-            const container = document.getElementById('menuGridContainer');
-            if (!container) return;
-            container.innerHTML = menuOficial.map(item => `
+            const containerPrincipales = document.getElementById('menuPrincipalesContainer');
+            const containerPorciones = document.getElementById('menuPorcionesContainer');
+            const containerBebidas = document.getElementById('menuBebidasContainer');
+
+            if (!containerPrincipales) return;
+
+            const principales = menuOficial.filter(i => i.categoria === 'Principal');
+            const porciones = menuOficial.filter(i => i.categoria === 'Porcion');
+            const bebidas = menuOficial.filter(i => i.categoria === 'Bebida');
+
+            const renderItems = (items) => items.map(item => `
                 <button type="button" class="menu-item-btn" onclick="agregarItemPedido(${item.id})">
                     <span class="menu-item-name">${item.nombre}</span>
                     <span class="menu-item-price">$${item.precio.toFixed(2)}</span>
                 </button>
             `).join('');
+
+            containerPrincipales.innerHTML = renderItems(principales);
+            containerPorciones.innerHTML = renderItems(porciones);
+            containerBebidas.innerHTML = renderItems(bebidas);
         }
 
         function renderTablaPrecios() {
@@ -848,7 +879,6 @@
                     }).join('');
                 }
 
-                // Renderizar Histórico de Cierres Anteriores
                 const tbodyHistorico = document.getElementById('tablaHistoricoCierres');
                 const historico = data.historicoCierres || [];
                 if (historico.length === 0) {
