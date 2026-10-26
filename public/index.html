@@ -802,7 +802,7 @@
                         </div>
                         <div style="font-size: 0.85rem; color: var(--accent); margin-bottom: 5px;">Cliente: ${p.cliente}</div>
                         <div class="comanda-details">
-                            ${p.detalle.map(d => `<div>${d.cantidad}x${d.plato} <small style="color: var(--warning);">(${d.tipoConsumo})</small></div>`).join('')}
+                            ${p.detalle.map(d => `<div>${d.cantidad}x ${d.plato} <small style="color: var(--warning);">(${d.tipoConsumo})</small></div>`).join('')}
                         </div>
                         <div class="comanda-footer">
                             <span>Total:</span>
@@ -876,4 +876,154 @@
 
         function calcularVuelto() {
             const efectivo = parseFloat(document.getElementById('inputEfectivo').value) || 0;
-            const total = pedidoCobrandoGlobal ? pedidoCobrandoGlobal
+            const total = pedidoCobrandoGlobal ? pedidoCobrandoGlobal.total : 0;
+            const vuelto = efectivo - total;
+            document.getElementById('labelVuelto').textContent = vuelto >= 0 ? vuelto.toFixed(2) : '0.00';
+        }
+
+        async function confirmarCobro() {
+            let efectivoRecibido = pedidoCobrandoGlobal.total;
+            if (metodoPagoSeleccionado === 'Efectivo') {
+                efectivoRecibido = parseFloat(document.getElementById('inputEfectivo').value) || 0;
+                if (efectivoRecibido < pedidoCobrandoGlobal.total) {
+                    alert("El efectivo recibido es menor al total de la cuenta.");
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(`/api/pedidos/${pedidoCobrandoGlobal.id}/cobrar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ efectivoRecibido, metodoPago: metodoPagoSeleccionado })
+                });
+
+                if (res.ok) {
+                    alert("¡Cobro registrado con éxito!");
+                    cerrarModalCobro();
+                    cargarComandas();
+                } else {
+                    alert("Error al procesar el cobro.");
+                }
+            } catch (e) {
+                alert("Error de conexión.");
+            }
+        }
+
+        async function cargarReportes() {
+            try {
+                const res = await fetch('/api/pedidos');
+                const data = await res.json();
+                
+                const totalVentas = data.totalDineroRecaudado || 0;
+                document.getElementById('repTotalVentas').textContent = `$${totalVentas.toFixed(2)}`;
+                
+                const cobrados = (data.pedidos || []).filter(p => p.estado === 'Cobrado');
+                document.getElementById('repTotalCuentas').textContent = cobrados.length;
+                const promedio = cobrados.length > 0 ? totalVentas / cobrados.length : 0;
+                document.getElementById('repTicketPromedio').textContent = `$${promedio.toFixed(2)}`;
+
+                let totalEfectivo = 0;
+                let totalTransferencia = 0;
+                cobrados.forEach(p => {
+                    if (p.metodoPago === 'Transferencia') totalTransferencia += p.total;
+                    else totalEfectivo += p.total;
+                });
+
+                document.getElementById('repTotalEfectivo').textContent = `$${totalEfectivo.toFixed(2)}`;
+                document.getElementById('repTotalTransferencia').textContent = `$${totalTransferencia.toFixed(2)}`;
+
+                const tbody = document.getElementById('tablaResumenPlatos');
+                const resumen = data.resumenProductos || {};
+                const keys = Object.keys(resumen);
+
+                if (keys.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay ventas cobradas hoy.</td></tr>';
+                } else {
+                    tbody.innerHTML = keys.map(plato => {
+                        const info = resumen[plato];
+                        const sub = info.cantidad * info.precio;
+                        return `<tr><td>${plato}</td><td>${info.cantidad}</td><td>$${sub.toFixed(2)}</td></tr>`;
+                    }).join('');
+                }
+
+                const tbodyHistorico = document.getElementById('tablaHistoricoCierres');
+                const historico = data.historicoCierres || [];
+
+                if (historico.length === 0) {
+                    tbodyHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay cierres históricos registrados.</td></tr>';
+                } else {
+                    tbodyHistorico.innerHTML = historico.map(c => {
+                        let detalleHtml = '<ul style="padding-left: 15px; font-size: 0.85rem; color: #ccc;">';
+                        const prodResumen = c.resumenProductos || {};
+                        for (let prodName in prodResumen) {
+                            detalleHtml += `<li>${prodResumen[prodName].cantidad}x ${prodName}</li>`;
+                        }
+                        detalleHtml += '</ul>';
+
+                        const efec = c.totalEfectivo !== undefined ? c.totalEfectivo : c.totalVentas;
+                        const transf = c.totalTransferencia !== undefined ? c.totalTransferencia : 0;
+
+                        return `
+                            <tr>
+                                <td><strong>${c.fecha}</strong></td>
+                                <td>${c.totalPedidos}</td>
+                                <td>${detalleHtml}</td>
+                                <td style="font-size: 0.9rem;">
+                                    <strong style="color: var(--accent);">Total: $${c.totalVentas.toFixed(2)}</strong><br>
+                                    <span style="color: #aaa;">Efectivo: $${efec.toFixed(2)}</span><br>
+                                    <span style="color: #aaa;">Transf: $${transf.toFixed(2)}</span>
+                                </td>
+                                <td>
+                                    <button class="nav-btn" style="background: var(--danger); border: none; padding: 6px 10px;" onclick="eliminarCierre('${c._id}')">Eliminar</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } catch (e) {
+                console.error("Error al cargar reportes", e);
+            }
+        }
+
+        async function eliminarCierre(idCierre) {
+            const claveIngresada = prompt("Ingrese la clave de seguridad para eliminar este cierre:");
+            if (claveIngresada === null) return;
+
+            try {
+                const res = await fetch(`/api/cierres/${idCierre}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clave: claveIngresada })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.mensaje);
+                    cargarReportes();
+                } else {
+                    alert(data.error || "Clave incorrecta o error al eliminar.");
+                }
+            } catch (e) {
+                alert("Error de conexión.");
+            }
+        }
+
+        async function hacerCierreDia() {
+            if (!confirm("¿Estás seguro de realizar el cierre de jornada? Se archivarán las cuentas actuales.")) return;
+            try {
+                const res = await fetch('/api/cierre-dia', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.mensaje);
+                    cargarReportes();
+                } else {
+                    alert(data.error || "Error al realizar el cierre.");
+                }
+            } catch (e) {
+                alert("Error de conexión.");
+            }
+        }
+    </script>
+</body>
+</html>
