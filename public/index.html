@@ -101,7 +101,31 @@
         }
         .tipo-btn {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .tipo-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .menu-category-selector {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .cat-btn {
+            flex: 1;
+            padding: 10px;
             background: #2a2a2a;
             border: 1px solid var(--border);
             color: var(--text-muted);
@@ -110,44 +134,35 @@
             text-align: center;
             font-weight: 600;
             font-size: 0.85rem;
+            transition: all 0.2s;
         }
-        .tipo-btn.active {
+        .cat-btn.active {
             background: var(--primary);
             color: white;
             border-color: var(--accent);
         }
 
-        .menu-section-title {
-            font-size: 0.95rem;
-            color: var(--accent);
-            margin: 15px 0 8px 0;
-            font-weight: bold;
-            border-left: 3px solid var(--accent);
-            padding-left: 8px;
-        }
-
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 8px;
-            max-height: 200px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            max-height: 380px;
             overflow-y: auto;
             padding-right: 5px;
-            margin-bottom: 10px;
         }
 
         .menu-item-btn {
             background: #252525;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 8px;
+            padding: 10px;
             color: white;
             cursor: pointer;
             text-align: left;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 80px;
+            height: 90px;
             transition: all 0.15s;
         }
         .menu-item-btn:hover {
@@ -155,8 +170,8 @@
             background: #2f2f2f;
             transform: translateY(-2px);
         }
-        .menu-item-name { font-size: 0.7rem; font-weight: bold; line-height: 1.1; }
-        .menu-item-price { font-size: 0.85rem; color: var(--accent); font-weight: bold; margin-top: 4px; }
+        .menu-item-name { font-size: 0.75rem; font-weight: bold; line-height: 1.1; }
+        .menu-item-price { font-size: 0.9rem; color: var(--accent); font-weight: bold; margin-top: 5px; }
 
         .order-items-list {
             max-height: 250px;
@@ -305,19 +320,16 @@
                         <div class="tipo-btn" onclick="setTipoPedido('Llevar')">Llevar</div>
                     </div>
 
-                    <h3 style="margin-top: 15px;">Selecciona Productos:</h3>
-                    
-                    <!-- SECCIÓN PLATOS PRINCIPALES -->
-                    <div class="menu-section-title">🥩 Platos Principales</div>
-                    <div class="menu-grid" id="menuPrincipalesContainer"></div>
+                    <label>Categoría de Productos:</label>
+                    <div class="menu-category-selector">
+                        <div class="cat-btn active" onclick="setCategoriaMenu('Principal')">🥩 Platos</div>
+                        <div class="cat-btn" onclick="setCategoriaMenu('Porcion')">🍟 Porciones</div>
+                        <div class="cat-btn" onclick="setCategoriaMenu('Bebida')">🥤 Bebidas</div>
+                    </div>
 
-                    <!-- SECCIÓN PORCIONES -->
-                    <div class="menu-section-title">🍟 Porciones y Adiciones</div>
-                    <div class="menu-grid" id="menuPorcionesContainer"></div>
-
-                    <!-- SECCIÓN BEBIDAS -->
-                    <div class="menu-section-title">🥤 Bebidas</div>
-                    <div class="menu-grid" id="menuBebidasContainer"></div>
+                    <div class="menu-grid" id="menuGridContainer">
+                        <!-- Generado dinámicamente por categoría -->
+                    </div>
                 </div>
 
                 <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -495,6 +507,7 @@
 
         let pedidoActualItems = [];
         let tipoPedidoSeleccionado = "Mesa";
+        let categoriaSeleccionada = "Principal";
         let pedidoCobrandoGlobal = null;
 
         window.onload = function() {
@@ -523,27 +536,28 @@
             }
         }
 
+        function setCategoriaMenu(cat) {
+            categoriaSeleccionada = cat;
+            const botones = document.querySelectorAll('.cat-btn');
+            botones.forEach(btn => {
+                if (btn.getAttribute('onclick').includes(cat)) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            renderMenuGrid();
+        }
+
         function renderMenuGrid() {
-            const containerPrincipales = document.getElementById('menuPrincipalesContainer');
-            const containerPorciones = document.getElementById('menuPorcionesContainer');
-            const containerBebidas = document.getElementById('menuBebidasContainer');
+            const container = document.getElementById('menuGridContainer');
+            if (!container) return;
 
-            if (!containerPrincipales) return;
+            const filtrados = menuOficial.filter(i => i.categoria === categoriaSeleccionada);
 
-            const principales = menuOficial.filter(i => i.categoria === 'Principal');
-            const porciones = menuOficial.filter(i => i.categoria === 'Porcion');
-            const bebidas = menuOficial.filter(i => i.categoria === 'Bebida');
-
-            const renderItems = (items) => items.map(item => `
+            container.innerHTML = filtrados.map(item => `
                 <button type="button" class="menu-item-btn" onclick="agregarItemPedido(${item.id})">
                     <span class="menu-item-name">${item.nombre}</span>
                     <span class="menu-item-price">$${item.precio.toFixed(2)}</span>
                 </button>
             `).join('');
-
-            containerPrincipales.innerHTML = renderItems(principales);
-            containerPorciones.innerHTML = renderItems(porciones);
-            containerBebidas.innerHTML = renderItems(bebidas);
         }
 
         function renderTablaPrecios() {
@@ -578,7 +592,7 @@
 
         function tipoPedidoSelectorUi(tipo) {
             tipoPedidoSeleccionado = tipo;
-            const botones = document.querySelectorAll('.tipo-btn');
+            const botones = document.querySelectorAll('.tipo-pedido-selector .tipo-btn');
             botones.forEach(btn => {
                 if (btn.textContent.includes(tipo)) btn.classList.add('active');
                 else btn.classList.remove('active');
@@ -719,6 +733,7 @@
             document.getElementById('tituloFormulario').textContent = 'Nuevo Pedido';
             document.getElementById('btnGuardarPedido').textContent = 'Guardar Pedido';
             setTipoPedido('Mesa');
+            setCategoriaMenu('Principal');
             renderPedidoActual();
         }
 
