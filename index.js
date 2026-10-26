@@ -24,6 +24,7 @@ const pedidoSchema = new mongoose.Schema({
     estado: { type: String, default: 'Pendiente' }, // 'Pendiente', 'Cobrado', 'Cerrado'
     efectivoRecibido: Number,
     vuelto: Number,
+    metodoPago: { type: String, default: 'Efectivo' }, // <--- Campo añadido para el método de pago
     fecha: { type: Date, default: Date.now }
 });
 
@@ -133,6 +134,7 @@ app.post('/api/pedidos/:id/cobrar', async (req, res) => {
         pedido.estado = 'Cobrado';
         pedido.efectivoRecibido = req.body.efectivoRecibido;
         pedido.vuelto = req.body.efectivoRecibido - pedido.total;
+        pedido.metodoPago = req.body.metodoPago || 'Efectivo'; // <--- Guardamos el método de pago recibido
         await pedido.save();
 
         res.json({ mensaje: "Cobro exitoso", pedido });
@@ -169,8 +171,7 @@ app.post('/api/cierre-dia', async (req, res) => {
         });
         await nuevoCierre.save();
 
-        // CAMBIO CLAVE: En lugar de borrar con deleteMany, actualizamos el estado a 'Cerrado'
-        // Esto archiva los pedidos en la base de datos sin perder el registro histórico de platos y dinero.
+        // Archiva los pedidos cambiando su estado a 'Cerrado'
         await Pedido.updateMany({ estado: { $in: ['Cobrado', 'Pendiente'] } }, { estado: 'Cerrado' });
 
         res.json({ mensaje: "¡Cierre de jornada realizado con éxito y registros guardados de forma segura!" });
