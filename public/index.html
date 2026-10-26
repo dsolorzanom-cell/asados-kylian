@@ -350,7 +350,9 @@
                         <div class="cat-btn" onclick="setCategoriaMenu('Bebida')">🥤 Bebidas</div>
                     </div>
 
-                    <div class="menu-grid" id="menuGridContainer"></div>
+                    <div class="menu-grid" id="menuGridContainer">
+                        <!-- Generado dinámicamente -->
+                    </div>
                 </div>
 
                 <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -874,11 +876,4 @@
 
         function calcularVuelto() {
             const efectivo = parseFloat(document.getElementById('inputEfectivo').value) || 0;
-            const total = pedidoCobrandoGlobal ? pedidoCobrandoGlobal.total : 0;
-            const vuelto = efectivo - total;
-            document.getElementById('labelVuelto').textContent = vuelto >= 0 ? vuelto.toFixed(2) : '0.00';
-        }
-
-        async function confirmarCobro() {
-            let efectivoRecibido = pedidoCobrandoGlobal.total;
-            if (metodoPagoSele
+            const total = pedidoCobrandoGlobal ? pedidoCobrandoGlobal
