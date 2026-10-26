@@ -21,19 +21,21 @@ const pedidoSchema = new mongoose.Schema({
     tipo: String,
     detalle: Array,
     total: Number,
-    estado: { type: String, default: 'Pendiente' }, // 'Pendiente', 'Cobrado', 'Cerrado'
+    estado: { type: String, default: 'Pendiente' },
     efectivoRecibido: Number,
     vuelto: Number,
-    metodoPago: { type: String, default: 'Efectivo' }, // <--- Campo añadido para el método de pago
+    metodoPago: { type: String, default: 'Efectivo' },
     fecha: { type: Date, default: Date.now }
 });
 
 const Pedido = mongoose.model('Pedido', pedidoSchema);
 
-// Esquema de Cierres Históricos
+// Esquema de Cierres Históricos actualizado
 const cierreSchema = new mongoose.Schema({
     fecha: String,
     totalVentas: Number,
+    totalEfectivo: Number,
+    totalTransferencia: Number,
     totalPedidos: Number,
     resumenProductos: Object
 });
@@ -42,10 +44,7 @@ const Cierre = mongoose.model('Cierre', cierreSchema);
 // Rutas de la API
 app.get('/api/pedidos', async (req, res) => {
     try {
-        // Solo traemos los pedidos activos del día actual (que no estén cerrados)
         const pedidos = await Pedido.find({ estado: { $ne: 'Cerrado' } }).sort({ id: -1 });
-        
-        // Calculamos estadísticas únicamente con los cobrados del día actual que no se han cerrado
         const cobrados = pedidos.filter(p => p.estado === 'Cobrado');
 
         let totalDineroRecaudado = 0;
@@ -63,7 +62,7 @@ app.get('/api/pedidos', async (req, res) => {
             }
         });
 
-        const historicoCierres = await Cierre.find().sort({ _id: -1 }).limit(10);
+        const historicoCierres = await Cierre.find().sort({ _id: -1 });
 
         res.json({
             pedidos,
@@ -134,7 +133,7 @@ app.post('/api/pedidos/:id/cobrar', async (req, res) => {
         pedido.estado = 'Cobrado';
         pedido.efectivoRecibido = req.body.efectivoRecibido;
         pedido.vuelto = req.body.efectivoRecibido - pedido.total;
-        pedido.metodoPago = req.body.metodoPago || 'Efectivo'; // <--- Guardamos el método de pago recibido
+        pedido.metodoPago = req.body.metodoPago || 'Efectivo';
         await pedido.save();
 
         res.json({ mensaje: "Cobro exitoso", pedido });
@@ -145,38 +144,59 @@ app.post('/api/pedidos/:id/cobrar', async (req, res) => {
 
 app.post('/api/cierre-dia', async (req, res) => {
     try {
-        // Buscamos los cobrados del día actual que aún no se han cerrado
         const cobrados = await Pedido.find({ estado: 'Cobrado' });
         if (cobrados.length === 0) {
             return res.status(400).json({ error: "No hay pedidos cobrados para cerrar el día." });
         }
 
         let totalVentas = 0;
+        let totalEfectivo = 0;
+        let totalTransferencia = 0;
         let resumenProductos = {};
 
         cobrados.forEach(p => {
             totalVentas += p.total;
+            if (p.metodoPago === 'Transferencia') {
+                totalTransferencia += p.total;
+            } else {
+                totalEfectivo += p.total;
+            }
+
             p.detalle.forEach(d => {
                 if (!resumenProductos[d.plato]) resumenProductos[d.plato] = { cantidad: 0, precio: d.precioUnitario };
                 resumenProductos[d.plato].cantidad += d.cantidad;
             });
         });
 
-        // Guardamos el reporte resumen en la colección de Cierres históricos
         const nuevoCierre = new Cierre({
             fecha: new Date().toLocaleDateString(),
             totalVentas,
+            totalEfectivo,
+            totalTransferencia,
             totalPedidos: cobrados.length,
             resumenProductos
         });
         await nuevoCierre.save();
 
-        // Archiva los pedidos cambiando su estado a 'Cerrado'
         await Pedido.updateMany({ estado: { $in: ['Cobrado', 'Pendiente'] } }, { estado: 'Cerrado' });
 
-        res.json({ mensaje: "¡Cierre de jornada realizado con éxito y registros guardados de forma segura!" });
+        res.json({ mensaje: "¡Cierre de jornada realizado con éxito!" });
     } catch (e) {
         res.status(500).json({ error: "Error al realizar el cierre" });
+    }
+});
+
+// Ruta para eliminar un cierre histórico mediante clave
+app.delete('/api/cierres/:id', async (req, res) => {
+    try {
+        const { clave } = req.body;
+        if (clave !== "Deiby22s") {
+            return res.status(401).json({ error: "Clave incorrecta. No se puede eliminar el cierre." });
+        }
+        await Cierre.findByIdAndDelete(req.params.id);
+        res.json({ mensaje: "Historial de cierre eliminado correctamente" });
+    } catch (e) {
+        res.status(500).json({ error: "Error al eliminar el cierre" });
     }
 });
 
