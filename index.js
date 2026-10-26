@@ -21,7 +21,7 @@ const pedidoSchema = new mongoose.Schema({
     tipo: String,
     detalle: Array,
     total: Number,
-    estado: { type: String, default: 'Pendiente' },
+    estado: { type: String, default: 'Pendiente' }, // 'Pendiente', 'Cobrado', 'Cerrado'
     efectivoRecibido: Number,
     vuelto: Number,
     fecha: { type: Date, default: Date.now }
@@ -41,8 +41,11 @@ const Cierre = mongoose.model('Cierre', cierreSchema);
 // Rutas de la API
 app.get('/api/pedidos', async (req, res) => {
     try {
+        // Solo traemos los pedidos activos del día actual (que no estén cerrados)
         const pedidos = await Pedido.find({ estado: { $ne: 'Cerrado' } }).sort({ id: -1 });
-        const cobrados = await Pedido.find({ estado: 'Cobrado' });
+        
+        // Calculamos estadísticas únicamente con los cobrados del día actual que no se han cerrado
+        const cobrados = pedidos.filter(p => p.estado === 'Cobrado');
 
         let totalDineroRecaudado = 0;
         let resumenProductos = {};
@@ -140,6 +143,7 @@ app.post('/api/pedidos/:id/cobrar', async (req, res) => {
 
 app.post('/api/cierre-dia', async (req, res) => {
     try {
+        // Buscamos los cobrados del día actual que aún no se han cerrado
         const cobrados = await Pedido.find({ estado: 'Cobrado' });
         if (cobrados.length === 0) {
             return res.status(400).json({ error: "No hay pedidos cobrados para cerrar el día." });
@@ -156,6 +160,7 @@ app.post('/api/cierre-dia', async (req, res) => {
             });
         });
 
+        // Guardamos el reporte resumen en la colección de Cierres históricos
         const nuevoCierre = new Cierre({
             fecha: new Date().toLocaleDateString(),
             totalVentas,
@@ -164,10 +169,11 @@ app.post('/api/cierre-dia', async (req, res) => {
         });
         await nuevoCierre.save();
 
-        await Pedido.deleteMany({ estado: 'Cobrado' });
-        await Pedido.updateMany({ estado: 'Pendiente' }, { estado: 'Cerrado' });
+        // CAMBIO CLAVE: En lugar de borrar con deleteMany, actualizamos el estado a 'Cerrado'
+        // Esto archiva los pedidos en la base de datos sin perder el registro histórico de platos y dinero.
+        await Pedido.updateMany({ estado: { $in: ['Cobrado', 'Pendiente'] } }, { estado: 'Cerrado' });
 
-        res.json({ mensaje: "¡Cierre de jornada realizado con éxito!" });
+        res.json({ mensaje: "¡Cierre de jornada realizado con éxito y registros guardados de forma segura!" });
     } catch (e) {
         res.status(500).json({ error: "Error al realizar el cierre" });
     }
