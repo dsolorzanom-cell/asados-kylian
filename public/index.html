@@ -342,6 +342,29 @@
         .lista-desglose ul {
             padding-left: 15px;
         }
+        .sabores-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .sabor-btn {
+            background: #252525;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .sabor-btn:hover {
+            background: var(--primary);
+            border-color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -507,6 +530,15 @@
 
     </div>
 
+    <!-- MODAL DE SELECCIÓN DE SABORES -->
+    <div id="modalSabores" class="modal">
+        <div class="modal-content">
+            <h3 id="tituloModalSabores">Seleccionar Sabor</h3>
+            <div class="sabores-grid" id="saboresContainer"></div>
+            <button class="btn-main" onclick="cerrarModalSabores()" style="background: #555;">Cancelar</button>
+        </div>
+    </div>
+
     <!-- MODAL DE COBRO -->
     <div id="modalCobro" class="modal">
         <div class="modal-content">
@@ -576,7 +608,8 @@
             { id: 33, nombre: "AGUA", precio: 0.50, categoria: "Bebida" },
             { id: 34, nombre: "COLA PERSONAL", precio: 0.50, categoria: "Bebida" },
             { id: 35, nombre: "CAFE", precio: 0.75, categoria: "Bebida" },
-            { id: 36, nombre: "AGUA AROMATICA", precio: 0.75, categoria: "Bebida" }
+            { id: 36, nombre: "AGUA AROMATICA", precio: 0.75, categoria: "Bebida" },
+            { id: 37, nombre: "COLA MEDIANA", precio: 0.75, categoria: "Bebida" }
         ];
 
         let pedidoActualItems = [];
@@ -584,6 +617,12 @@
         let categoriaSeleccionada = "Principal";
         let metodoPagoSeleccionado = "Efectivo";
         let pedidoCobrandoGlobal = null;
+
+        const saboresColas = {
+            30: ["COCA COLA", "INCA", "SPRITE", "FIORA", "FANTA"], // GASEOSA VARIOS LT
+            34: ["INCA", "SPRITE", "FIORA", "FANTA", "PEPSI", "TROPICAL"], // COLA PERSONAL
+            37: ["PEPSI", "GALLITO", "TROPICAL", "7 UP"] // COLA MEDIANA
+        };
 
         window.onload = function() {
             renderMenuGrid();
@@ -625,7 +664,7 @@
             if (!container) return;
             const filtrados = menuOficial.filter(i => i.categoria === categoriaSeleccionada);
             container.innerHTML = filtrados.map(item => `
-                <button type="button" class="menu-item-btn" onclick="agregarItemPedido(${item.id})">
+                <button type="button" class="menu-item-btn" onclick="manejarClickPlato(${item.id})">
                     <span class="menu-item-name">${item.nombre}</span>
                     <span class="menu-item-price">$${item.precio.toFixed(2)}</span>
                 </button>
@@ -686,9 +725,41 @@
             }
         }
 
-        function agregarItemPedido(idPlato) {
+        function manejarClickPlato(idPlato) {
+            if (saboresColas[idPlato]) {
+                abrirModalSabores(idPlato);
+            } else {
+                agregarItemPedido(idPlato);
+            }
+        }
+
+        function abrirModalSabores(idPlato) {
             const plato = menuOficial.find(p => p.id === idPlato);
             if (!plato) return;
+
+            document.getElementById('tituloModalSabores').textContent = `Seleccionar Sabor: ${plato.nombre}`;
+            const container = document.getElementById('saboresContainer');
+            const listaSabores = saboresColas[idPlato];
+
+            container.innerHTML = listaSabores.map(sabor => `
+                <button type="button" class="sabor-btn" onclick="agregarItemPedido(${idPlato}, '${sabor}')">${sabor}</button>
+            `).join('');
+
+            document.getElementById('modalSabores').style.display = 'flex';
+        }
+
+        function cerrarModalSabores() {
+            document.getElementById('modalSabores').style.display = 'none';
+        }
+
+        function agregarItemPedido(idPlato, saborEspecifico = null) {
+            const plato = menuOficial.find(p => p.id === idPlato);
+            if (!plato) return;
+
+            let nombreFinal = plato.nombre;
+            if (saborEspecifico) {
+                nombreFinal = `${plato.nombre} - ${saborEspecifico}`;
+            }
 
             const tipoConsumoItem = tipoPedidoSeleccionado; 
             let precioFinal = plato.precio;
@@ -698,21 +769,21 @@
                     precioFinal += 0.50;
                 } else if (plato.categoria === 'Porcion' && !plato.nombre.includes('MENESTRA')) {
                     if (plato.nombre.includes('PORCION DE PICADA')) {
-                        precioFinal = 4.00; // Sube a $4.00 para llevar
+                        precioFinal = 4.00;
                     } else if (!plato.nombre.includes('PORCION DE TERNERA')) {
-                        precioFinal += 0.25; // Demás porciones llevan 0.25, excepto la ternera
+                        precioFinal += 0.25;
                     }
                 }
             }
 
-            const existente = pedidoActualItems.find(i => i.id === idPlato && i.tipoConsumo === tipoConsumoItem);
+            const existente = pedidoActualItems.find(i => i.id === idPlato && i.nombre === nombreFinal && i.tipoConsumo === tipoConsumoItem);
             
             if (existente) {
                 existente.cantidad++;
             } else {
                 pedidoActualItems.push({
                     id: plato.id,
-                    nombre: plato.nombre,
+                    nombre: nombreFinal,
                     categoria: plato.categoria,
                     tipoConsumo: tipoConsumoItem,
                     precioBase: plato.precio,
@@ -720,15 +791,19 @@
                     cantidad: 1
                 });
             }
+
+            if (saborEspecifico) {
+                cerrarModalSabores();
+            }
             renderPedidoActual();
         }
 
-        function cambiarCantidad(idPlato, tipoConsumo, delta) {
-            const item = pedidoActualItems.find(i => i.id === idPlato && i.tipoConsumo === tipoConsumo);
+        function cambiarCantidad(idPlato, nombreItem, tipoConsumo, delta) {
+            const item = pedidoActualItems.find(i => i.id === idPlato && i.nombre === nombreItem && i.tipoConsumo === tipoConsumo);
             if (!item) return;
             item.cantidad += delta;
             if (item.cantidad <= 0) {
-                pedidoActualItems = pedidoActualItems.filter(i => !(i.id === idPlato && i.tipoConsumo === tipoConsumo));
+                pedidoActualItems = pedidoActualItems.filter(i => !(i.id === idPlato && i.nombre === nombreItem && i.tipoConsumo === tipoConsumo));
             }
             renderPedidoActual();
         }
@@ -752,9 +827,9 @@
                             <small style="color: var(--accent);">$${item.precioUnitario.toFixed(2)} c/u</small>
                         </div>
                         <div class="item-controls">
-                            <button type="button" onclick="cambiarCantidad(${item.id}, '${item.tipoConsumo}', -1)">-</button>
+                            <button type="button" onclick="cambiarCantidad(${item.id}, '${item.nombre}', '${item.tipoConsumo}', -1)">-</button>
                             <span>${item.cantidad}</span>
-                            <button type="button" onclick="cambiarCantidad(${item.id}, '${item.tipoConsumo}', 1)">+</button>
+                            <button type="button" onclick="cambiarCantidad(${item.id}, '${item.nombre}', '${item.tipoConsumo}', 1)">+</button>
                             <span style="min-width: 55px; text-align: right; font-weight: bold;">$${sub.toFixed(2)}</span>
                         </div>
                     </div>
@@ -1008,8 +1083,8 @@
                         let countBebidas = 0;
 
                         for (let prodName in prodResumen) {
-                            const itemInfo = menuOficial.find(m => m.nombre === prodName);
-                            const cat = itemInfo ? itemInfo.categoria : 'Principal';
+                            const itemInfo = menuOficial.find(m => m.nombre === prodName || prodName.startsWith(m.nombre));
+                            const cat = itemInfo ? itemInfo.categoria : 'Bebida';
                             const cant = prodResumen[prodName].cantidad;
                             const textoItem = `<li>${cant}x ${prodName}</li>`;
 
@@ -1107,26 +1182,4 @@
             try {
                 const now = new Date();
                 const anio = now.getFullYear();
-                const mes = String(now.getMonth() + 1).padStart(2, '0');
-                const dia = String(now.getDate()).padStart(2, '0');
-                const fechaLocal = `${mes}/${dia}/${anio}`;
-
-                const res = await fetch('/api/cierre-dia', { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fechaForzada: fechaLocal })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    alert(data.mensaje);
-                    cargarReportes();
-                } else {
-                    alert(data.error || "Error al realizar el cierre.");
-                }
-            } catch (e) {
-                alert("Error de conexión.");
-            }
-        }
-    </script>
-</body>
-</html>
+                const mes = String(now.getMonth() + 1
