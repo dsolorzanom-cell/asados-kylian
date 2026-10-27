@@ -691,14 +691,20 @@
             if (!plato) return;
 
             const tipoConsumoItem = tipoPedidoSeleccionado; 
-            let recargo = 0;
+            let precioFinal = plato.precio;
 
             if (tipoConsumoItem === 'Llevar') {
-                if (plato.categoria === 'Principal') recargo = 0.50;
-                else if (plato.categoria === 'Porcion' && !plato.nombre.includes('MENESTRA')) recargo = 0.25;
+                if (plato.categoria === 'Principal') {
+                    precioFinal += 0.50;
+                } else if (plato.categoria === 'Porcion' && !plato.nombre.includes('MENESTRA')) {
+                    if (plato.nombre.includes('PORCION DE PICADA')) {
+                        precioFinal = 4.00; // Sube a $4.00 para llevar
+                    } else if (!plato.nombre.includes('PORCION DE TERNERA')) {
+                        precioFinal += 0.25; // Demás porciones llevan 0.25, excepto la ternera
+                    }
+                }
             }
 
-            let precioFinal = plato.precio + recargo;
             const existente = pedidoActualItems.find(i => i.id === idPlato && i.tipoConsumo === tipoConsumoItem);
             
             if (existente) {
@@ -1099,12 +1105,11 @@
         async function hacerCierreDia() {
             if (!confirm("¿Estás seguro de realizar el cierre de jornada? Se archivarán las cuentas actuales.")) return;
             try {
-                // Corrección de zona horaria: Creamos la fecha usando la hora local exacta del dispositivo
                 const now = new Date();
                 const anio = now.getFullYear();
                 const mes = String(now.getMonth() + 1).padStart(2, '0');
                 const dia = String(now.getDate()).padStart(2, '0');
-                const fechaLocal = `${mes}/${dia}/${anio}`; // Formato MM/DD/YYYY exacto de tu sistema
+                const fechaLocal = `${mes}/${dia}/${anio}`;
 
                 const res = await fetch('/api/cierre-dia', { 
                     method: 'POST',
