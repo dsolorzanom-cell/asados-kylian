@@ -1099,10 +1099,12 @@
         async function hacerCierreDia() {
             if (!confirm("¿Estás seguro de realizar el cierre de jornada? Se archivarán las cuentas actuales.")) return;
             try {
+                // Corrección de zona horaria: Creamos la fecha usando la hora local exacta del dispositivo
                 const now = new Date();
-                const fechaLocal = String(now.getMonth() + 1).padStart(2, '0') + '/' + 
-                                   String(now.getDate()).padStart(2, '0') + '/' + 
-                                   now.getFullYear();
+                const anio = now.getFullYear();
+                const mes = String(now.getMonth() + 1).padStart(2, '0');
+                const dia = String(now.getDate()).padStart(2, '0');
+                const fechaLocal = `${mes}/${dia}/${anio}`; // Formato MM/DD/YYYY exacto de tu sistema
 
                 const res = await fetch('/api/cierre-dia', { 
                     method: 'POST',
