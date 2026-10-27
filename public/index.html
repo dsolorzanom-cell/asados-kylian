@@ -303,6 +303,45 @@
             color: white;
             border-color: var(--accent);
         }
+
+        .cierre-detalles-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 4px 0;
+        }
+        .btn-desglose {
+            background: #252525;
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .btn-desglose:hover {
+            background: #2f2f2f;
+        }
+        .lista-desglose {
+            display: none;
+            background: #161616;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 25px;
+            margin-bottom: 4px;
+            font-size: 0.82rem;
+            color: #ccc;
+        }
+        .lista-desglose ul {
+            padding-left: 15px;
+        }
     </style>
 </head>
 <body>
@@ -350,9 +389,7 @@
                         <div class="cat-btn" onclick="setCategoriaMenu('Bebida')">🥤 Bebidas</div>
                     </div>
 
-                    <div class="menu-grid" id="menuGridContainer">
-                        <!-- Generado dinámicamente -->
-                    </div>
+                    <div class="menu-grid" id="menuGridContainer"></div>
                 </div>
 
                 <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -433,8 +470,8 @@
                         <tr>
                             <th>Fecha</th>
                             <th>Pedidos</th>
-                            <th>Desglose de Ventas (Platos / Porciones / Bebidas)</th>
-                            <th>Montos (Total / Efectivo / Transf.)</th>
+                            <th>Desglose por Categorías</th>
+                            <th>Montos (Total / Efec / Transf)</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
@@ -953,13 +990,36 @@
                 if (historico.length === 0) {
                     tbodyHistorico.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay cierres históricos registrados.</td></tr>';
                 } else {
-                    tbodyHistorico.innerHTML = historico.map(c => {
-                        let detalleHtml = '<ul style="padding-left: 15px; font-size: 0.85rem; color: #ccc;">';
+                    tbodyHistorico.innerHTML = historico.map((c, index) => {
                         const prodResumen = c.resumenProductos || {};
+                        
+                        let platosHtml = '<ul>';
+                        let porcionesHtml = '<ul>';
+                        let bebidasHtml = '<ul>';
+                        
+                        let countPlatos = 0;
+                        let countPorciones = 0;
+                        let countBebidas = 0;
+
                         for (let prodName in prodResumen) {
-                            detalleHtml += `<li>${prodResumen[prodName].cantidad}x ${prodName}</li>`;
+                            const itemInfo = menuOficial.find(m => m.nombre === prodName);
+                            const cat = itemInfo ? itemInfo.categoria : 'Principal';
+                            const textoItem = `<li>${prodResumen[prodName].cantidad}x ${prodName}</li>`;
+
+                            if (cat === 'Principal') {
+                                platosHtml += textoItem;
+                                countPlatos++;
+                            } else if (cat === 'Porcion') {
+                                porcionesHtml += textoItem;
+                                countPorciones++;
+                            } else {
+                                bebidasHtml += textoItem;
+                                countBebidas++;
+                            }
                         }
-                        detalleHtml += '</ul>';
+                        platosHtml += '</ul>';
+                        porcionesHtml += '</ul>';
+                        bebidasHtml += '</ul>';
 
                         const efec = c.totalEfectivo !== undefined ? c.totalEfectivo : c.totalVentas;
                         const transf = c.totalTransferencia !== undefined ? c.totalTransferencia : 0;
@@ -968,7 +1028,24 @@
                             <tr>
                                 <td><strong>${c.fecha}</strong></td>
                                 <td>${c.totalPedidos}</td>
-                                <td>${detalleHtml}</td>
+                                <td>
+                                    <div class="cierre-detalles-box">
+                                        <button class="btn-desglose" onclick="toggleDesglose('platos_${index}')">
+                                            🥩 Platos Vendidos (${countPlatos}) <span>▼</span>
+                                        </button>
+                                        <div id="platos_${index}" class="lista-desglose">${platosHtml}</div>
+
+                                        <button class="btn-desglose" onclick="toggleDesglose('porciones_${index}')">
+                                            🍟 Porciones Vendidas (${countPorciones}) <span>▼</span>
+                                        </button>
+                                        <div id="porciones_${index}" class="lista-desglose">${porcionesHtml}</div>
+
+                                        <button class="btn-desglose" onclick="toggleDesglose('bebidas_${index}')">
+                                            🥤 Bebidas Vendidas (${countBebidas}) <span>▼</span>
+                                        </button>
+                                        <div id="bebidas_${index}" class="lista-desglose">${bebidasHtml}</div>
+                                    </div>
+                                </td>
                                 <td style="font-size: 0.9rem;">
                                     <strong style="color: var(--accent);">Total: $${c.totalVentas.toFixed(2)}</strong><br>
                                     <span style="color: #aaa;">Efectivo: $${efec.toFixed(2)}</span><br>
@@ -983,6 +1060,15 @@
                 }
             } catch (e) {
                 console.error("Error al cargar reportes", e);
+            }
+        }
+
+        function toggleDesglose(idElem) {
+            const el = document.getElementById(idElem);
+            if (el.style.display === 'block') {
+                el.style.display = 'none';
+            } else {
+                el.style.display = 'block';
             }
         }
 
@@ -1012,7 +1098,17 @@
         async function hacerCierreDia() {
             if (!confirm("¿Estás seguro de realizar el cierre de jornada? Se archivarán las cuentas actuales.")) return;
             try {
-                const res = await fetch('/api/cierre-dia', { method: 'POST' });
+                // Genera la fecha actual en formato MM/DD/YYYY o local exacta del dispositivo
+                const now = new Date();
+                const fechaLocal = String(now.getMonth() + 1).padStart(2, '0') + '/' + 
+                                   String(now.getDate()).padStart(2, '0') + '/' + 
+                                   now.getFullYear();
+
+                const res = await fetch('/api/cierre-dia', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fechaForzada: fechaLocal })
+                });
                 const data = await res.json();
                 if (res.ok) {
                     alert(data.mensaje);
