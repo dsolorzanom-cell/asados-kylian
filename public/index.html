@@ -1004,17 +1004,18 @@
                         for (let prodName in prodResumen) {
                             const itemInfo = menuOficial.find(m => m.nombre === prodName);
                             const cat = itemInfo ? itemInfo.categoria : 'Principal';
-                            const textoItem = `<li>${prodResumen[prodName].cantidad}x ${prodName}</li>`;
+                            const cant = prodResumen[prodName].cantidad;
+                            const textoItem = `<li>${cant}x ${prodName}</li>`;
 
                             if (cat === 'Principal') {
                                 platosHtml += textoItem;
-                                countPlatos++;
+                                countPlatos += cant;
                             } else if (cat === 'Porcion') {
                                 porcionesHtml += textoItem;
-                                countPorciones++;
+                                countPorciones += cant;
                             } else {
                                 bebidasHtml += textoItem;
-                                countBebidas++;
+                                countBebidas += cant;
                             }
                         }
                         platosHtml += '</ul>';
@@ -1098,7 +1099,6 @@
         async function hacerCierreDia() {
             if (!confirm("¿Estás seguro de realizar el cierre de jornada? Se archivarán las cuentas actuales.")) return;
             try {
-                // Genera la fecha actual en formato MM/DD/YYYY o local exacta del dispositivo
                 const now = new Date();
                 const fechaLocal = String(now.getMonth() + 1).padStart(2, '0') + '/' + 
                                    String(now.getDate()).padStart(2, '0') + '/' + 
