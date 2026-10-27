@@ -372,10 +372,10 @@
     <header>
         <h1>🥩 Asados y Parrilla D' Kylian</h1>
         <div class="nav-tabs">
-            <button class="nav-btn active" onclick="cambiarVista('pos')">Registrar Pedido</button>
-            <button class="nav-btn" onclick="cambiarVista('comandas')">Comandas Activas</button>
-            <button class="nav-btn" onclick="cambiarVista('reportes')">Reportes del Día</button>
-            <button class="nav-btn" onclick="cambiarVista('precios')" style="background: var(--accent); color: #000;">⚙️ Modificar Precios</button>
+            <button class="nav-btn active" onclick="cambiarVista('pos', this)">Registrar Pedido</button>
+            <button class="nav-btn" onclick="cambiarVista('comandas', this)">Comandas Activas</button>
+            <button class="nav-btn" onclick="cambiarVista('reportes', this)">Reportes del Día</button>
+            <button class="nav-btn" onclick="cambiarVista('precios', this)" style="background: var(--accent); color: #000;">⚙️ Modificar Precios</button>
         </div>
     </header>
 
@@ -619,33 +619,33 @@
         let pedidoCobrandoGlobal = null;
 
         const saboresColas = {
-            30: ["COCA COLA", "INCA", "SPRITE", "FIORA", "FANTA"], // GASEOSA VARIOS LT
-            34: ["INCA", "SPRITE", "FIORA", "FANTA", "PEPSI", "TROPICAL"], // COLA PERSONAL
-            37: ["PEPSI", "GALLITO", "TROPICAL", "7 UP"] // COLA MEDIANA
+            30: ["COCA COLA", "INCA", "SPRITE", "FIORA", "FANTA"],
+            34: ["INCA", "SPRITE", "FIORA", "FANTA", "PEPSI", "TROPICAL"],
+            37: ["PEPSI", "GALLITO", "TROPICAL", "7 UP"]
         };
 
         window.onload = function() {
             renderMenuGrid();
         };
 
-        function cambiarVista(vista) {
+        function cambiarVista(vista, btnElement) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
             if (vista === 'pos') {
                 document.getElementById('vista-pos').classList.add('active');
-                event.target.classList.add('active');
+                if (btnElement) btnElement.classList.add('active');
             } else if (vista === 'comandas') {
                 document.getElementById('vista-comandas').classList.add('active');
-                event.target.classList.add('active');
+                if (btnElement) btnElement.classList.add('active');
                 cargarComandas();
             } else if (vista === 'reportes') {
                 document.getElementById('vista-reportes').classList.add('active');
-                event.target.classList.add('active');
+                if (btnElement) btnElement.classList.add('active');
                 cargarReportes();
             } else if (vista === 'precios') {
                 document.getElementById('vista-precios').classList.add('active');
-                event.target.classList.add('active');
+                if (btnElement) btnElement.classList.add('active');
                 renderTablaPrecios();
             }
         }
@@ -879,7 +879,7 @@
                     alert(idEdit ? "¡Pedido actualizado con éxito!" : "¡Pedido registrado con éxito!");
                     limpiarPedido();
                     cargarComandas();
-                    cambiarVista('comandas');
+                    cambiarVista('comandas', document.querySelectorAll('.nav-btn')[1]);
                 } else {
                     alert("Error al guardar el pedido en el servidor.");
                 }
@@ -942,7 +942,7 @@
         }
 
         function editarPedido(p) {
-            cambiarVista('pos');
+            cambiarVista('pos', document.querySelectorAll('.nav-btn')[0]);
             document.getElementById('editPedidoId').value = p.id;
             document.getElementById('inputCliente').value = p.cliente;
             document.getElementById('inputMesa').value = p.mesa;
@@ -1182,4 +1182,26 @@
             try {
                 const now = new Date();
                 const anio = now.getFullYear();
-                const mes = String(now.getMonth() + 1
+                const mes = String(now.getMonth() + 1).padStart(2, '0');
+                const dia = String(now.getDate()).padStart(2, '0');
+                const fechaLocal = `${mes}/${dia}/${anio}`;
+
+                const res = await fetch('/api/cierre-dia', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fechaForzada: fechaLocal })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.mensaje);
+                    cargarReportes();
+                } else {
+                    alert(data.error || "Error al realizar el cierre.");
+                }
+            } catch (e) {
+                alert("Error de conexión.");
+            }
+        }
+    </script>
+</body>
+</html>
