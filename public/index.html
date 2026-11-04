@@ -238,6 +238,7 @@
             position: relative;
             border-top: 4px solid var(--warning);
         }
+        .comanda-card.cobrado { border-top-color: var(--success); opacity: 0.85; }
 
         .comanda-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
         .comanda-title { font-weight: bold; font-size: 1.1rem; color: var(--accent); }
@@ -313,10 +314,10 @@
             background: #252525;
             border: 1px solid var(--border);
             color: var(--accent);
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: bold;
             text-align: left;
             display: flex;
@@ -333,9 +334,9 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 8px 12px;
-            margin-top: 25px;
+            margin-top: 4px;
             margin-bottom: 4px;
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             color: #ccc;
         }
         .lista-desglose ul {
@@ -373,7 +374,8 @@
         <div class="nav-tabs">
             <button class="nav-btn active" onclick="cambiarVista('pos', this)">Registrar Pedido</button>
             <button class="nav-btn" onclick="cambiarVista('comandas', this)">Comandas Activas</button>
-            <button class="nav-btn" onclick="cambiarVista('reportes', this)">Reportes del Día</button>
+            <button class="nav-btn" onclick="cambiarVista('productos', this)" style="background: #0277bd; color: #fff;">📋 Productos Vendidos</button>
+            <button class="nav-btn" onclick="cambiarVista('reportes', this)">Reportes del Día (Admin)</button>
             <button class="nav-btn" onclick="cambiarVista('precios', this)" style="background: var(--accent); color: #000;">⚙️ Modificar Precios</button>
         </div>
     </header>
@@ -443,9 +445,19 @@
             <div class="comandas-grid" id="comandasContainer"></div>
         </div>
 
-        <!-- VISTA REPORTES -->
+        <!-- VISTA PRODUCTOS VENDIDOS (PARA EMPLEADAS - SIN DINERO) -->
+        <div id="vista-productos" class="view-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Conteo de Productos Vendidos Hoy</h2>
+                <button class="nav-btn" onclick="cargarProductosVendidos()">🔄 Actualizar</button>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Resumen operativo para control de cocina y atención (sin montos de dinero).</p>
+            <div class="cierre-detalles-box" id="desglosePlatosHoyContainer"></div>
+        </div>
+
+        <!-- VISTA REPORTES (ADMINISTRADOR - CON DINERO) -->
         <div id="vista-reportes" class="view-section">
-            <h2>Reporte General del Día</h2>
+            <h2>Reporte Financiero General del Día</h2>
             <div class="report-stats" style="margin-top: 15px;">
                 <div class="stat-box">
                     <h4>Total Recaudado (Suma)</h4>
@@ -467,22 +479,6 @@
                     <h4>Ticket Promedio</h4>
                     <p id="repTicketPromedio">$0.00</p>
                 </div>
-            </div>
-
-            <h3 style="margin-top: 20px;">Platos Vendidos Hoy</h3>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Plato / Producto</th>
-                            <th>Cantidad Vendida</th>
-                            <th>Total Generado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaResumenPlatos">
-                        <tr><td colspan="3" style="text-align: center;">No hay ventas cobradas hoy.</td></tr>
-                    </tbody>
-                </table>
             </div>
 
             <h3 style="margin-top: 30px;">Historial de Cierres Anteriores</h3>
@@ -628,6 +624,14 @@
         };
 
         function cambiarVista(vista, btnElement) {
+            if (vista === 'reportes') {
+                const clave = prompt("Ingrese la clave de Administrador para ver Reportes Financieros:");
+                if (clave !== "Deiby22s") {
+                    alert("Clave incorrecta.");
+                    return;
+                }
+            }
+
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
@@ -638,6 +642,10 @@
                 document.getElementById('vista-comandas').classList.add('active');
                 if (btnElement) btnElement.classList.add('active');
                 cargarComandas();
+            } else if (vista === 'productos') {
+                document.getElementById('vista-productos').classList.add('active');
+                if (btnElement) btnElement.classList.add('active');
+                cargarProductosVendidos();
             } else if (vista === 'reportes') {
                 document.getElementById('vista-reportes').classList.add('active');
                 if (btnElement) btnElement.classList.add('active');
@@ -904,21 +912,24 @@
                 const res = await fetch('/api/pedidos');
                 const data = await res.json();
                 const container = document.getElementById('comandasContainer');
-                const todosLosPedidos = data.pedidos || [];
+                let todosLosPedidos = data.pedidos || [];
 
-                // Filtrar únicamente los pedidos con estado Pendiente (los cobrados se ocultan)
-                const pendientes = todosLosPedidos.filter(p => p.estado === 'Pendiente');
-
-                if (pendientes.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay pedidos pendientes.</p>';
+                if (todosLosPedidos.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay pedidos activos.</p>';
                     return;
                 }
 
-                container.innerHTML = pendientes.map(p => `
-                    <div class="comanda-card">
+                todosLosPedidos.sort((a, b) => {
+                    if (a.estado === 'Pendiente' && b.estado === 'Cobrado') return -1;
+                    if (a.estado === 'Cobrado' && b.estado === 'Pendiente') return 1;
+                    return 0;
+                });
+
+                container.innerHTML = todosLosPedidos.map(p => `
+                    <div class="comanda-card ${p.estado === 'Cobrado' ? 'cobrado' : ''}">
                         <div class="comanda-header">
                             <span class="comanda-title">#${p.id} - ${p.mesa}</span>
-                            <span class="comanda-badge">${p.estado}</span>
+                            <span class="comanda-badge" style="background: ${p.estado === 'Cobrado' ? 'var(--success)' : 'var(--warning)'}; color: #000; font-weight: bold;">${p.estado}</span>
                         </div>
                         <div style="font-size: 0.85rem; color: var(--accent); margin-bottom: 5px;">Cliente: ${p.cliente}</div>
                         <div class="comanda-details">
@@ -928,9 +939,12 @@
                             <span>Total:</span>
                             <span style="color: var(--accent);">$${p.total.toFixed(2)}</span>
                         </div>
+                        ${p.metodoPago ? `<div style="font-size: 0.75rem; color: var(--success); margin-top: 4px;">Pagado con: ${p.metodoPago}</div>` : ''}
                         <div class="comanda-actions">
-                            <button type="button" class="btn-editar" onclick='editarPedido(${JSON.stringify(p)})'>Editar</button>
-                            <button type="button" class="btn-cobrar" onclick='abrirModalCobro(${JSON.stringify(p)})'>Cobrar</button>
+                            ${p.estado === 'Pendiente' ? `
+                                <button type="button" class="btn-editar" onclick='editarPedido(${JSON.stringify(p)})'>Editar</button>
+                                <button type="button" class="btn-cobrar" onclick='abrirModalCobro(${JSON.stringify(p)})'>Cobrar</button>
+                            ` : ''}
                             <button type="button" class="btn-eliminar" onclick="eliminarPedido(${p.id})">Eliminar</button>
                         </div>
                     </div>
@@ -1027,6 +1041,71 @@
             }
         }
 
+        async function cargarProductosVendidos() {
+            try {
+                const res = await fetch('/api/pedidos');
+                const data = await res.json();
+                
+                const containerHoy = document.getElementById('desglosePlatosHoyContainer');
+                const resumen = data.resumenProductos || {};
+                const keys = Object.keys(resumen);
+
+                if (keys.length === 0) {
+                    containerHoy.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No hay productos vendidos registrados hoy.</p>';
+                    return;
+                }
+
+                let platosHtml = '<ul>';
+                let porcionesHtml = '<ul>';
+                let bebidasHtml = '<ul>';
+                
+                let countPlatos = 0;
+                let countPorciones = 0;
+                let countBebidas = 0;
+
+                keys.forEach(prodName => {
+                    const info = resumen[prodName];
+                    const itemInfo = menuOficial.find(m => m.nombre === prodName || prodName.startsWith(m.nombre));
+                    const cat = itemInfo ? itemInfo.categoria : 'Bebida';
+                    const cant = info.cantidad;
+                    const textoItem = `<li><strong>${cant}x</strong> ${prodName}</li>`;
+
+                    if (cat === 'Principal') {
+                        platosHtml += textoItem;
+                        countPlatos += cant;
+                    } else if (cat === 'Porcion') {
+                        porcionesHtml += textoItem;
+                        countPorciones += cant;
+                    } else {
+                        bebidasHtml += textoItem;
+                        countBebidas += cant;
+                    }
+                });
+                platosHtml += '</ul>';
+                porcionesHtml += '</ul>';
+                bebidasHtml += '</ul>';
+
+                containerHoy.innerHTML = `
+                    <button class="btn-desglose" onclick="toggleDesglose('prod_platos')">
+                        🥩 Platos Vendidos (${countPlatos}) <span>▼</span>
+                    </button>
+                    <div id="prod_platos" class="lista-desglose">${platosHtml}</div>
+
+                    <button class="btn-desglose" onclick="toggleDesglose('prod_porciones')" style="margin-top: 8px;">
+                        🍟 Porciones Vendidas (${countPorciones}) <span>▼</span>
+                    </button>
+                    <div id="prod_porciones" class="lista-desglose">${porcionesHtml}</div>
+
+                    <button class="btn-desglose" onclick="toggleDesglose('prod_bebidas')" style="margin-top: 8px;">
+                        🥤 Bebidas Vendidas (${countBebidas}) <span>▼</span>
+                    </button>
+                    <div id="prod_bebidas" class="lista-desglose">${bebidasHtml}</div>
+                `;
+            } catch (e) {
+                console.error("Error al cargar productos vendidos", e);
+            }
+        }
+
         async function cargarReportes() {
             try {
                 const res = await fetch('/api/pedidos');
@@ -1049,20 +1128,6 @@
 
                 document.getElementById('repTotalEfectivo').textContent = `$${totalEfectivo.toFixed(2)}`;
                 document.getElementById('repTotalTransferencia').textContent = `$${totalTransferencia.toFixed(2)}`;
-
-                const tbody = document.getElementById('tablaResumenPlatos');
-                const resumen = data.resumenProductos || {};
-                const keys = Object.keys(resumen);
-
-                if (keys.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay ventas cobradas hoy.</td></tr>';
-                } else {
-                    tbody.innerHTML = keys.map(plato => {
-                        const info = resumen[plato];
-                        const sub = info.cantidad * info.precio;
-                        return `<tr><td>${plato}</td><td>${info.cantidad}</td><td>$${sub.toFixed(2)}</td></tr>`;
-                    }).join('');
-                }
 
                 const tbodyHistorico = document.getElementById('tablaHistoricoCierres');
                 const historico = data.historicoCierres || [];
