@@ -238,7 +238,6 @@
             position: relative;
             border-top: 4px solid var(--warning);
         }
-        .comanda-card.cobrado { border-top-color: var(--success); }
 
         .comanda-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
         .comanda-title { font-weight: bold; font-size: 1.1rem; color: var(--accent); }
@@ -905,15 +904,18 @@
                 const res = await fetch('/api/pedidos');
                 const data = await res.json();
                 const container = document.getElementById('comandasContainer');
-                const pedidos = data.pedidos || [];
+                const todosLosPedidos = data.pedidos || [];
 
-                if (pedidos.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay pedidos activos.</p>';
+                // Filtrar únicamente los pedidos con estado Pendiente (los cobrados se ocultan)
+                const pendientes = todosLosPedidos.filter(p => p.estado === 'Pendiente');
+
+                if (pendientes.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay pedidos pendientes.</p>';
                     return;
                 }
 
-                container.innerHTML = pedidos.map(p => `
-                    <div class="comanda-card ${p.estado === 'Cobrado' ? 'cobrado' : ''}">
+                container.innerHTML = pendientes.map(p => `
+                    <div class="comanda-card">
                         <div class="comanda-header">
                             <span class="comanda-title">#${p.id} - ${p.mesa}</span>
                             <span class="comanda-badge">${p.estado}</span>
@@ -926,12 +928,9 @@
                             <span>Total:</span>
                             <span style="color: var(--accent);">$${p.total.toFixed(2)}</span>
                         </div>
-                        ${p.metodoPago ? `<div style="font-size: 0.75rem; color: var(--success); margin-top: 4px;">Pagado con: ${p.metodoPago}</div>` : ''}
                         <div class="comanda-actions">
-                            ${p.estado === 'Pendiente' ? `
-                                <button type="button" class="btn-editar" onclick='editarPedido(${JSON.stringify(p)})'>Editar</button>
-                                <button type="button" class="btn-cobrar" onclick='abrirModalCobro(${JSON.stringify(p)})'>Cobrar</button>
-                            ` : ''}
+                            <button type="button" class="btn-editar" onclick='editarPedido(${JSON.stringify(p)})'>Editar</button>
+                            <button type="button" class="btn-cobrar" onclick='abrirModalCobro(${JSON.stringify(p)})'>Cobrar</button>
                             <button type="button" class="btn-eliminar" onclick="eliminarPedido(${p.id})">Eliminar</button>
                         </div>
                     </div>
