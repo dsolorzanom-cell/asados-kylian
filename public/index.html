@@ -375,7 +375,7 @@
             <button class="nav-btn active" onclick="cambiarVista('pos', this)">Registrar Pedido</button>
             <button class="nav-btn" onclick="cambiarVista('comandas', this)">Comandas Activas</button>
             <button class="nav-btn" onclick="cambiarVista('productos', this)" style="background: #0277bd; color: #fff;">📋 Productos Vendidos</button>
-            <button class="nav-btn" onclick="cambiarVista('reportes', this)">Reportes del Día (Admin)</button>
+            <button class="nav-btn" onclick="cambiarVista('reportes', this)">Reportes del Día</button>
             <button class="nav-btn" onclick="cambiarVista('precios', this)" style="background: var(--accent); color: #000;">⚙️ Modificar Precios</button>
         </div>
     </header>
@@ -455,7 +455,7 @@
             <div class="cierre-detalles-box" id="desglosePlatosHoyContainer"></div>
         </div>
 
-        <!-- VISTA REPORTES (ADMINISTRADOR - CON DINERO) -->
+        <!-- VISTA REPORTES (CON DINERO) -->
         <div id="vista-reportes" class="view-section">
             <h2>Reporte Financiero General del Día</h2>
             <div class="report-stats" style="margin-top: 15px;">
@@ -624,14 +624,6 @@
         };
 
         function cambiarVista(vista, btnElement) {
-            if (vista === 'reportes') {
-                const clave = prompt("Ingrese la clave de Administrador para ver Reportes Financieros:");
-                if (clave !== "Deiby22s") {
-                    alert("Clave incorrecta.");
-                    return;
-                }
-            }
-
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
