@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asados y Parrilla D' Kylian</title>
-    <!-- Librería SheetJS para exportar a Excel profesionalmente -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Librería profesional para exportar a Excel con estilos (colores, bordes y formatos) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         :root {
             --primary: #8b0000;
@@ -483,7 +483,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN NUEVA: EXPORTAR A EXCEL POR RANGO DE FECHAS -->
+            <!-- SECCIÓN: EXPORTAR A EXCEL POR RANGO DE FECHAS -->
             <div class="card" style="margin: 25px 0; background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 8px;">
                 <h3 style="color: var(--accent); margin-bottom: 12px; font-size: 1rem;">📥 Descargar Reporte en Excel por Rango de Fechas</h3>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
@@ -1281,7 +1281,7 @@
             }
         }
 
-        // FUNCIÓN NUEVA: EXPORTAR REPORTE A EXCEL POR RANGO DE FECHAS
+        // FUNCIÓN PROFESIONAL DE EXPORTACIÓN A EXCEL CON ESTILOS Y FORMATOS
         async function exportarExcelFechas() {
             const fechaDesde = document.getElementById('excelFechaDesde').value;
             const fechaHasta = document.getElementById('excelFechaHasta').value;
@@ -1296,15 +1296,13 @@
                 const data = await res.json();
                 const historico = data.historicoCierres || [];
 
-                // Filtrar cierres dentro del rango de fechas (formato MM/DD/YYYY o YYYY-MM-DD)
-                const d1 = new Date(fechaDesde);
-                const d2 = new Date(fechaHasta);
+                const d1 = new Date(fechaDesde + "T00:00:00");
+                const d2 = new Date(fechaHasta + "T23:59:59");
 
                 const cierresFiltrados = historico.filter(c => {
-                    // c.fecha viene como MM/DD/YYYY
                     const partes = c.fecha.split('/');
                     if (partes.length === 3) {
-                        const fechaCierreObj = new Date(`${partes[2]}-${partes[0]}-${partes[1]}`);
+                        const fechaCierreObj = new Date(`${partes[2]}-${partes[0].padStart(2, '0')}-${partes[1].padStart(2, '0')}T12:00:00`);
                         return fechaCierreObj >= d1 && fechaCierreObj <= d2;
                     }
                     return false;
@@ -1315,20 +1313,57 @@
                     return;
                 }
 
-                // Crear libro de Excel con 2 pestañas
+                cierresFiltrados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+                const estiloTitulo = { font: { name: "Calibri", sz: 14, bold: true, color: { rgb: "4A151B" } } };
+                const estiloSubtitulo = { font: { name: "Calibri", sz: 10, italic: true, color: { rgb: "555555" } } };
+                const bordeFino = {
+                    top: { style: "thin", color: { rgb: "D3D3D3" } },
+                    bottom: { style: "thin", color: { rgb: "D3D3D3" } },
+                    left: { style: "thin", color: { rgb: "D3D3D3" } },
+                    right: { style: "thin", color: { rgb: "D3D3D3" } }
+                };
+                const estiloEncabezado = {
+                    font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+                    fill: { fgColor: { rgb: "4A151B" } },
+                    alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                    border: bordeFino
+                };
+                const estiloTotal = {
+                    font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "1E1E1E" } },
+                    fill: { fgColor: { rgb: "EFE6D5" } },
+                    border: {
+                        top: { style: "thin", color: { rgb: "4A151B" } },
+                        bottom: { style: "double", color: { rgb: "4A151B" } },
+                        left: { style: "thin", color: { rgb: "D3D3D3" } },
+                        right: { style: "thin", color: { rgb: "D3D3D3" } }
+                    }
+                };
+
                 const wb = XLSX.utils.book_new();
 
-                // Pestaña 1: Resumen General
+                // PESTAÑA 1: RESUMEN GENERAL
                 const datosResumen = [
-                    ["ASADOS Y PARRILLA D' KYLIAN — REPORTE DE VENTAS"],
-                    [`Período: ${fechaDesde} al ${fechaHasta}`],
+                    [{ v: "ASADOS Y PARRILLA D' KYLIAN — REPORTE DE VENTAS", s: estiloTitulo }],
+                    [{ v: `Período Consultado: ${fechaDesde} al ${fechaHasta}`, s: estiloSubtitulo }],
                     [],
-                    ["Fecha de Cierre", "Pedidos Cobrados", "Efectivo ($)", "Transferencias ($)", "Total Ventas ($)", "Platos Vendidos", "Porciones Vendidas", "Bebidas Vendidas", "Ticket Promedio ($)"]
+                    [
+                        { v: "Fecha de Cierre", s: estiloEncabezado },
+                        { v: "Pedidos Cobrados", s: estiloEncabezado },
+                        { v: "Efectivo ($)", s: estiloEncabezado },
+                        { v: "Transferencias ($)", s: estiloEncabezado },
+                        { v: "Total Ventas ($)", s: estiloEncabezado },
+                        { v: "Platos Vendidos", s: estiloEncabezado },
+                        { v: "Porciones Vendidas", s: estiloEncabezado },
+                        { v: "Bebidas Vendidas", s: estiloEncabezado },
+                        { v: "Ticket Promedio ($)", s: estiloEncabezado }
+                    ]
                 ];
 
-                let totalVentasG = 0, totalEfecG = 0, totalTransfG = 0, totalPedidosG = 0, totalPlatosG = 0;
+                let totalVentasG = 0, totalEfecG = 0, totalTransfG = 0, totalPedidosG = 0;
+                let totalPlatosG = 0, totalPorcionesG = 0, totalBebidasG = 0;
 
-                cierresFiltrados.forEach(c => {
+                cierresFiltrados.forEach((c, idx) => {
                     const efec = c.totalEfectivo !== undefined ? c.totalEfectivo : c.totalVentas;
                     const transf = c.totalTransferencia !== undefined ? c.totalTransferencia : 0;
                     const totalVenta = c.totalVentas;
@@ -1351,32 +1386,56 @@
                     totalTransfG += transf;
                     totalPedidosG += tickets;
                     totalPlatosG += pCount;
+                    totalPorcionesG += porCount;
+                    totalBebidasG += bCount;
+
+                    const fondoFila = idx % 2 === 1 ? { fgColor: { rgb: "F9F6F2" } } : { fgColor: { rgb: "FFFFFF" } };
+                    const estiloCentro = { font: { name: "Calibri", sz: 10 }, fill: fondoFila, alignment: { horizontal: "center" }, border: bordeFino };
+                    const estiloMoneda = { font: { name: "Calibri", sz: 10 }, fill: fondoFila, alignment: { horizontal: "right" }, border: bordeFino, numFmt: '"$"#,##0.00' };
+                    const estiloMonedaNegrita = { font: { name: "Calibri", sz: 10, bold: true }, fill: fondoFila, alignment: { horizontal: "right" }, border: bordeFino, numFmt: '"$"#,##0.00' };
 
                     datosResumen.push([
-                        c.fecha,
-                        tickets,
-                        efec,
-                        transf,
-                        totalVenta,
-                        pCount,
-                        porCount,
-                        bCount,
-                        ticketProm
+                        { v: c.fecha, s: estiloCentro },
+                        { v: tickets, t: "n", s: estiloCentro },
+                        { v: efec, t: "n", s: estiloMoneda },
+                        { v: transf, t: "n", s: estiloMoneda },
+                        { v: totalVenta, t: "n", s: estiloMonedaNegrita },
+                        { v: pCount, t: "n", s: estiloCentro },
+                        { v: porCount, t: "n", s: estiloCentro },
+                        { v: bCount, t: "n", s: estiloCentro },
+                        { v: ticketProm, t: "n", s: estiloMoneda }
                     ]);
                 });
 
-                datosResumen.push([]);
-                datosResumen.push(["TOTAL GENERAL", totalPedidosG, totalEfecG, totalTransfG, totalVentasG, totalPlatosG, "", "", totalPedidosG > 0 ? totalVentasG / totalPedidosG : 0]);
+                const ticketPromGlobal = totalPedidosG > 0 ? totalVentasG / totalPedidosG : 0;
+                datosResumen.push([
+                    { v: "TOTAL GENERAL", s: { ...estiloTotal, alignment: { horizontal: "center" } } },
+                    { v: totalPedidosG, t: "n", s: { ...estiloTotal, alignment: { horizontal: "center" } } },
+                    { v: totalEfecG, t: "n", s: { ...estiloTotal, alignment: { horizontal: "right" }, numFmt: '"$"#,##0.00' } },
+                    { v: totalTransfG, t: "n", s: { ...estiloTotal, alignment: { horizontal: "right" }, numFmt: '"$"#,##0.00' } },
+                    { v: totalVentasG, t: "n", s: { ...estiloTotal, alignment: { horizontal: "right" }, numFmt: '"$"#,##0.00' } },
+                    { v: totalPlatosG, t: "n", s: { ...estiloTotal, alignment: { horizontal: "center" } } },
+                    { v: totalPorcionesG, t: "n", s: { ...estiloTotal, alignment: { horizontal: "center" } } },
+                    { v: totalBebidasG, t: "n", s: { ...estiloTotal, alignment: { horizontal: "center" } } },
+                    { v: ticketPromGlobal, t: "n", s: { ...estiloTotal, alignment: { horizontal: "right" }, numFmt: '"$"#,##0.00' } }
+                ]);
 
                 const ws1 = XLSX.utils.aoa_to_sheet(datosResumen);
+                ws1['!cols'] = [{ wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 17 }, { wch: 19 }, { wch: 17 }, { wch: 19 }];
                 XLSX.utils.book_append_sheet(wb, ws1, "Resumen General");
 
-                // Pestaña 2: Desglose por Categorías
+                // PESTAÑA 2: DESGLOSE POR CATEGORÍAS
                 const datosDesglose = [
-                    ["DESGLOSE DE PRODUCTOS VENDIDOS POR CATEGORÍA"],
-                    [`Período: ${fechaDesde} al ${fechaHasta}`],
+                    [{ v: "DESGLOSE DE PRODUCTOS VENDIDOS POR CATEGORÍA", s: estiloTitulo }],
+                    [{ v: `Consolidado del ${fechaDesde} al ${fechaHasta}`, s: estiloSubtitulo }],
                     [],
-                    ["Categoría", "Plato / Producto", "Cantidad Vendida", "Total Generado ($)"]
+                    [
+                        { v: "Categoría", s: estiloEncabezado },
+                        { v: "Plato / Producto", s: estiloEncabezado },
+                        { v: "Precio Ref. ($)", s: estiloEncabezado },
+                        { v: "Cantidad Vendida", s: estiloEncabezado },
+                        { v: "Total Generado ($)", s: estiloEncabezado }
+                    ]
                 ];
 
                 const consolidadoProductos = {};
@@ -1390,26 +1449,45 @@
                     }
                 });
 
-                for (let prodName in consolidadoProductos) {
+                const listaProductos = Object.keys(consolidadoProductos).map(prodName => {
                     const itemInfo = menuOficial.find(m => m.nombre === prodName || prodName.startsWith(m.nombre));
                     const cat = itemInfo ? itemInfo.categoria : 'Bebida';
+                    const catLabel = cat === 'Principal' ? 'Platos' : (cat === 'Porcion' ? 'Porciones' : 'Bebidas');
+                    const orden = cat === 'Principal' ? 1 : (cat === 'Porcion' ? 2 : 3);
                     const cant = consolidadoProductos[prodName].cantidad;
                     const precioRef = consolidadoProductos[prodName].precio || (itemInfo ? itemInfo.precio : 0);
-                    const subtotal = cant * precioRef;
+                    return { orden, catLabel, prodName, precioRef, cant, subtotal: cant * precioRef };
+                }).sort((a, b) => a.orden - b.orden || b.cant - a.cant);
+
+                let totalUnidades = 0, totalDineroProd = 0;
+
+                listaProductos.forEach((item, idx) => {
+                    totalUnidades += item.cant;
+                    totalDineroProd += item.subtotal;
+                    const fondoFila = idx % 2 === 1 ? { fgColor: { rgb: "F9F6F2" } } : { fgColor: { rgb: "FFFFFF" } };
 
                     datosDesglose.push([
-                        cat === 'Principal' ? 'Plato' : (cat === 'Porcion' ? 'Porción' : 'Bebida'),
-                        prodName,
-                        cant,
-                        subtotal
+                        { v: item.catLabel, s: { font: { name: "Calibri", sz: 10, bold: true }, fill: fondoFila, alignment: { horizontal: "center" }, border: bordeFino } },
+                        { v: item.prodName, s: { font: { name: "Calibri", sz: 10 }, fill: fondoFila, alignment: { horizontal: "left" }, border: bordeFino } },
+                        { v: item.precioRef, t: "n", s: { font: { name: "Calibri", sz: 10 }, fill: fondoFila, alignment: { horizontal: "right" }, border: bordeFino, numFmt: '"$"#,##0.00' } },
+                        { v: item.cant, t: "n", s: { font: { name: "Calibri", sz: 10 }, fill: fondoFila, alignment: { horizontal: "center" }, border: bordeFino } },
+                        { v: item.subtotal, t: "n", s: { font: { name: "Calibri", sz: 10, bold: true }, fill: fondoFila, alignment: { horizontal: "right" }, border: bordeFino, numFmt: '"$"#,##0.00' } }
                     ]);
-                }
+                });
+
+                datosDesglose.push([
+                    { v: "TOTAL CONSOLIDADO", s: { ...estiloTotal, alignment: { horizontal: "center" } } },
+                    { v: "", s: estiloTotal },
+                    { v: "", s: estiloTotal },
+                    { v: totalUnidades, t: "n", s: { ...estiloTotal, alignment: { horizontal: "center" } } },
+                    { v: totalDineroProd, t: "n", s: { ...estiloTotal, alignment: { horizontal: "right" }, numFmt: '"$"#,##0.00' } }
+                ]);
 
                 const ws2 = XLSX.utils.aoa_to_sheet(datosDesglose);
+                ws2['!cols'] = [{ wch: 16 }, { wch: 36 }, { wch: 16 }, { wch: 18 }, { wch: 20 }];
                 XLSX.utils.book_append_sheet(wb, ws2, "Desglose por Categorías");
 
-                // Descargar archivo Excel
-                XLSX.writeFile(wb, `Reporte_Ventas_${fechaDesde}_al_${fechaHasta}.xlsx`.replace(/\//g, '-'));
+                XLSX.writeFile(wb, `Reporte_Ventas_D_Kylian_${fechaDesde}_al_${fechaHasta}.xlsx`);
 
             } catch (e) {
                 console.error("Error al exportar Excel", e);
