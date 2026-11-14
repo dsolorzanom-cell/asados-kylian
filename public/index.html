@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asados y Parrilla D' Kylian</title>
+    <!-- Librería SheetJS para exportar a Excel profesionalmente -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary: #8b0000;
@@ -455,7 +457,7 @@
             <div class="cierre-detalles-box" id="desglosePlatosHoyContainer"></div>
         </div>
 
-        <!-- VISTA REPORTES (CON DINERO) -->
+        <!-- VISTA REPORTES (CON DINERO Y EXCEL) -->
         <div id="vista-reportes" class="view-section">
             <h2>Reporte Financiero General del Día</h2>
             <div class="report-stats" style="margin-top: 15px;">
@@ -478,6 +480,26 @@
                 <div class="stat-box">
                     <h4>Ticket Promedio</h4>
                     <p id="repTicketPromedio">$0.00</p>
+                </div>
+            </div>
+
+            <!-- SECCIÓN NUEVA: EXPORTAR A EXCEL POR RANGO DE FECHAS -->
+            <div class="card" style="margin: 25px 0; background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 8px;">
+                <h3 style="color: var(--accent); margin-bottom: 12px; font-size: 1rem;">📥 Descargar Reporte en Excel por Rango de Fechas</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                    <div style="flex: 1; min-width: 140px;">
+                        <label style="font-size: 0.8rem; color: #aaa;">Fecha Desde:</label>
+                        <input type="date" id="excelFechaDesde" style="padding: 8px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 6px; width: 100%;">
+                    </div>
+                    <div style="flex: 1; min-width: 140px;">
+                        <label style="font-size: 0.8rem; color: #aaa;">Fecha Hasta:</label>
+                        <input type="date" id="excelFechaHasta" style="padding: 8px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 6px; width: 100%;">
+                    </div>
+                    <div>
+                        <button type="button" onclick="exportarExcelFechas()" style="background: #2e7d32; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            📊 Descargar Excel
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1256,6 +1278,142 @@
                 }
             } catch (e) {
                 alert("Error de conexión.");
+            }
+        }
+
+        // FUNCIÓN NUEVA: EXPORTAR REPORTE A EXCEL POR RANGO DE FECHAS
+        async function exportarExcelFechas() {
+            const fechaDesde = document.getElementById('excelFechaDesde').value;
+            const fechaHasta = document.getElementById('excelFechaHasta').value;
+
+            if (!fechaDesde || !fechaHasta) {
+                alert("Por favor selecciona la fecha 'Desde' y 'Hasta'.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/pedidos');
+                const data = await res.json();
+                const historico = data.historicoCierres || [];
+
+                // Filtrar cierres dentro del rango de fechas (formato MM/DD/YYYY o YYYY-MM-DD)
+                const d1 = new Date(fechaDesde);
+                const d2 = new Date(fechaHasta);
+
+                const cierresFiltrados = historico.filter(c => {
+                    // c.fecha viene como MM/DD/YYYY
+                    const partes = c.fecha.split('/');
+                    if (partes.length === 3) {
+                        const fechaCierreObj = new Date(`${partes[2]}-${partes[0]}-${partes[1]}`);
+                        return fechaCierreObj >= d1 && fechaCierreObj <= d2;
+                    }
+                    return false;
+                });
+
+                if (cierresFiltrados.length === 0) {
+                    alert("No hay cierres registrados en el rango de fechas seleccionado.");
+                    return;
+                }
+
+                // Crear libro de Excel con 2 pestañas
+                const wb = XLSX.utils.book_new();
+
+                // Pestaña 1: Resumen General
+                const datosResumen = [
+                    ["ASADOS Y PARRILLA D' KYLIAN — REPORTE DE VENTAS"],
+                    [`Período: ${fechaDesde} al ${fechaHasta}`],
+                    [],
+                    ["Fecha de Cierre", "Pedidos Cobrados", "Efectivo ($)", "Transferencias ($)", "Total Ventas ($)", "Platos Vendidos", "Porciones Vendidas", "Bebidas Vendidas", "Ticket Promedio ($)"]
+                ];
+
+                let totalVentasG = 0, totalEfecG = 0, totalTransfG = 0, totalPedidosG = 0, totalPlatosG = 0;
+
+                cierresFiltrados.forEach(c => {
+                    const efec = c.totalEfectivo !== undefined ? c.totalEfectivo : c.totalVentas;
+                    const transf = c.totalTransferencia !== undefined ? c.totalTransferencia : 0;
+                    const totalVenta = c.totalVentas;
+                    const tickets = c.totalPedidos || 1;
+                    const ticketProm = totalVenta / tickets;
+
+                    let pCount = 0, porCount = 0, bCount = 0;
+                    const prodResumen = c.resumenProductos || {};
+                    for (let prodName in prodResumen) {
+                        const itemInfo = menuOficial.find(m => m.nombre === prodName || prodName.startsWith(m.nombre));
+                        const cat = itemInfo ? itemInfo.categoria : 'Bebida';
+                        const cant = prodResumen[prodName].cantidad;
+                        if (cat === 'Principal') pCount += cant;
+                        else if (cat === 'Porcion') porCount += cant;
+                        else bCount += cant;
+                    }
+
+                    totalVentasG += totalVenta;
+                    totalEfecG += efec;
+                    totalTransfG += transf;
+                    totalPedidosG += tickets;
+                    totalPlatosG += pCount;
+
+                    datosResumen.push([
+                        c.fecha,
+                        tickets,
+                        efec,
+                        transf,
+                        totalVenta,
+                        pCount,
+                        porCount,
+                        bCount,
+                        ticketProm
+                    ]);
+                });
+
+                datosResumen.push([]);
+                datosResumen.push(["TOTAL GENERAL", totalPedidosG, totalEfecG, totalTransfG, totalVentasG, totalPlatosG, "", "", totalPedidosG > 0 ? totalVentasG / totalPedidosG : 0]);
+
+                const ws1 = XLSX.utils.aoa_to_sheet(datosResumen);
+                XLSX.utils.book_append_sheet(wb, ws1, "Resumen General");
+
+                // Pestaña 2: Desglose por Categorías
+                const datosDesglose = [
+                    ["DESGLOSE DE PRODUCTOS VENDIDOS POR CATEGORÍA"],
+                    [`Período: ${fechaDesde} al ${fechaHasta}`],
+                    [],
+                    ["Categoría", "Plato / Producto", "Cantidad Vendida", "Total Generado ($)"]
+                ];
+
+                const consolidadoProductos = {};
+                cierresFiltrados.forEach(c => {
+                    const prodResumen = c.resumenProductos || {};
+                    for (let prodName in prodResumen) {
+                        if (!consolidadoProductos[prodName]) {
+                            consolidadoProductos[prodName] = { cantidad: 0, precio: prodResumen[prodName].precio };
+                        }
+                        consolidadoProductos[prodName].cantidad += prodResumen[prodName].cantidad;
+                    }
+                });
+
+                for (let prodName in consolidadoProductos) {
+                    const itemInfo = menuOficial.find(m => m.nombre === prodName || prodName.startsWith(m.nombre));
+                    const cat = itemInfo ? itemInfo.categoria : 'Bebida';
+                    const cant = consolidadoProductos[prodName].cantidad;
+                    const precioRef = consolidadoProductos[prodName].precio || (itemInfo ? itemInfo.precio : 0);
+                    const subtotal = cant * precioRef;
+
+                    datosDesglose.push([
+                        cat === 'Principal' ? 'Plato' : (cat === 'Porcion' ? 'Porción' : 'Bebida'),
+                        prodName,
+                        cant,
+                        subtotal
+                    ]);
+                }
+
+                const ws2 = XLSX.utils.aoa_to_sheet(datosDesglose);
+                XLSX.utils.book_append_sheet(wb, ws2, "Desglose por Categorías");
+
+                // Descargar archivo Excel
+                XLSX.writeFile(wb, `Reporte_Ventas_${fechaDesde}_al_${fechaHasta}.xlsx`.replace(/\//g, '-'));
+
+            } catch (e) {
+                console.error("Error al exportar Excel", e);
+                alert("Ocurrió un error al generar el archivo Excel.");
             }
         }
     </script>
